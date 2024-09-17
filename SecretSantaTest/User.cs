@@ -12,6 +12,10 @@ namespace SecretSantaTest
         public string surname { get; set; }
         public string number { get; set; }
 
+        public override string ToString()
+        {
+            return $"{name} : {number}";
+        }
     }
 }
 
