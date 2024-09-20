@@ -22,7 +22,7 @@ public class UsersController : ControllerBase
         };
         return Ok(response);
     }
-
+    
     // POST: 
     [HttpPost]
     public ActionResult Post([FromBody] MathRequest request)
