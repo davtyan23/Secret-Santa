@@ -7,7 +7,7 @@ namespace SecretSantaAPI.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private char symbol { get; set; }  // Changed to 'symbol' for clarity
+        private char symbol { get; set; }  
         Random random = new Random();
 
         // GET: api/users
