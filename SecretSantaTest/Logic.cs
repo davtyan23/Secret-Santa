@@ -1,38 +1,27 @@
-﻿using System;
+﻿using DataAccess;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
-public class Users
-{
-    public string name;
-    public string surname;
-    public string number;
-
-    public override string ToString()
-    {
-        return $"{name} {surname}";
-    }
-}
 
 class SecretSanta
 {
     static void Main(string[] args)
     {
         // Main users list
-        List<Users> users = new List<Users>()
+        List<User> users = new List<User>()
         {
-            new Users() { number = "09923659", name = "Liana", surname = "Manukyan" },
-            new Users() { number = "03311552", name = "Anna", surname = "Stepanyan" },
-            new Users() { number = "01546546", name = "Armen", surname = "Vardanyan" },
-            new Users() { number = "01354684", name = "Antur", surname = "Grigoryan" },
-            new Users() { number = "09544645", name = "Lenon", surname = "Amiryan" },
-            new Users() { number = "06476876", name = "Anna", surname = "Kirakosyan" },
-            new Users() { number = "03422155", name = "Vana", surname = "Ananayan" },
-            new Users() { number = "08900954", name = "Artak", surname = "Abovyan" }
+            new User() { number = "09923659", name = "Liana", surname = "Manukyan" },
+            new User() { number = "03311552", name = "Anna", surname = "Stepanyan" },
+            new User() { number = "01546546", name = "Armen", surname = "Vardanyan" },
+            new User() { number = "01354684", name = "Antur", surname = "Grigoryan" },
+            new User() { number = "09544645", name = "Lenon", surname = "Amiryan" },
+            new User() { number = "06476876", name = "Anna", surname = "Kirakosyan" },
+            new User() { number = "03422155", name = "Vana", surname = "Ananayan" },
+            new User() { number = "08900954", name = "Artak", surname = "Abovyan" }
         };
 
-        List<Users> santa = new List<Users>();
-        List<Users> receiver = new List<Users>();
+        List<User> santa = new List<User>();
+        List<User> receiver = new List<User>();
 
         Random random = new Random();
 
@@ -63,7 +52,7 @@ class SecretSanta
         }
 
         // Pairing dictionary
-        Dictionary<Users, Users> aih = new Dictionary<Users, Users>();
+        Dictionary<User, User> aih = new Dictionary<User, User>();
         for (int k = 0; k < users.Count; k++)
         {
             aih[santa[k]] = receiver[k];
