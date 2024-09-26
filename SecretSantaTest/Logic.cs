@@ -3,8 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-class SecretSanta
+public class SecretSanta
 {
+    public User getUsers(int a, int b) 
+    {
+        throw new NotImplementedException();
+    }
     static void Main(string[] args)
     {
         // Main users list

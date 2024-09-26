@@ -3,18 +3,17 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(); ;
 
-var configuration = builder.Configuration;
-
-var connectionString = configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<SecretSantaContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Build the app
+// Build the app.
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,9 +24,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
+// Run the application.
 app.Run();

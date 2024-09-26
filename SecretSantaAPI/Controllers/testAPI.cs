@@ -1,16 +1,20 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Business;
+using DataAccess.Models;
+using DataAccess.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SecretSantaAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private char symbol { get; set; }  
+        private char symbol { get; set; }
         Random random = new Random();
-
+        SecretSanta secretSanta = new SecretSanta();
         // GET: api/users
+   
+        [Route("GetNumbers")]
         [HttpGet]
         public ActionResult GetNumbers()
         {
@@ -23,8 +27,10 @@ namespace SecretSantaAPI.Controllers
         }
 
         // POST
+
+        [Route("Calculate")]
         [HttpPost]
-        public ActionResult Post([FromBody] MathRequest request)
+        public ActionResult Post([FromBody] MathRequestDTO request)
         {
             double randNum1 = random.Next(0, 100);
             double randNum2 = random.Next(0, 100);
@@ -73,8 +79,10 @@ namespace SecretSantaAPI.Controllers
         }
 
         // PUT
+
+        [Route("Update")]
         [HttpPut]
-        public ActionResult Put([FromBody] MathRequest request)
+        public ActionResult Put([FromBody] MathRequestDTO request)
         {
             int a = request.Number1;
             int b = request.Number2;
@@ -82,17 +90,13 @@ namespace SecretSantaAPI.Controllers
         }
 
         // DELETE
+        [Route("Delete")]
         [HttpDelete]
         public ActionResult Delete()
         {
             return Ok("Values reset successfully");
         }
 
-        public class MathRequest
-        {
-            public int Number1 { get; set; }
-            public int Number2 { get; set; }
-            public char Symbol { get; set; }  
-        }
+       
     }
 }
