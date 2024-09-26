@@ -3,15 +3,19 @@ using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.Entity;
 
 namespace SecretSantaAPI.Controllers
 {
     [ApiController]
     public class UsersController : ControllerBase
     {
+
         private char symbol { get; set; }
         Random random = new Random();
         SecretSanta secretSanta = new SecretSanta();
+
+
         // GET: api/users
    
         [Route("GetNumbers")]
