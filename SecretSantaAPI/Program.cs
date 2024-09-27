@@ -13,8 +13,7 @@ builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<SecretSantaContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<SecretSantaContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IRepository, Repository>();
 builder.Services.AddScoped<IUserService, UserService>();
 // Build the app.

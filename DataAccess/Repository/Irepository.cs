@@ -9,7 +9,7 @@ namespace DataAccess.Repositories
         Task DeleteUserAsync(int id);
         Task<List<User>> GetAllActiveUsersAsync();
         Task<List<User>> GetPaginatedUsersAsync(int limit, int offset);
-        Task<User> GetUserByIdAsync(int id);
+        Task<User> GetUsersByIdAsync(int id);
         Task UpdateUserAsync(User user);
     }
 }

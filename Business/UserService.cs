@@ -18,31 +18,38 @@ public class UserService : IUserService
 
     public async Task<List<User>> GetAllActiveUsersAsync()
     {
-        return await _repository.GetAllActiveUsersAsync();
+        var result = await _repository.GetAllActiveUsersAsync();   
+        result.Sort((x, y) => x.Id.CompareTo(y.Id));
+        return result;
     }
 
-    public async Task<User> GetUserByIdAsync(int id)
+    public async Task<User> GetUsersByIdAsync(int id)
     {
-        return await _repository.GetUserByIdAsync(id);
+        return await _repository.GetUsersByIdAsync(id);
     }
 
-    public async Task AddUserAsync(User user)
+    public async Task AddUsersAsync(User user)
     {
         await _repository.AddUserAsync(user);
     }
 
-    public async Task UpdateUserAsync(User user)
+    public async Task UpdateUsersAsync(User user)
     {
         await _repository.UpdateUserAsync(user);
     }
 
-    public async Task DeactivateUserAsync(int id)
+    public async Task DeactivateUsersAsync(int id)
     {
         await _repository.DeactivateUserAsync(id);
     }
 
-    public async Task DeleteUserAsync(int id)
+    public async Task DeleteUsersAsync(int id)
     {
         await _repository.DeleteUserAsync(id);
+    }
+
+    public Task GetActiveUsersAsync(int limit, int offset)
+    {
+        throw new NotImplementedException();
     }
 }
