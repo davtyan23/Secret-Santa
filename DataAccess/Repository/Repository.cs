@@ -16,19 +16,34 @@ namespace DataAccess.Repositories
 
         public async Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
         {
+
             return await _context.Users
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
         }
+        public List<User> GetAllActiveUsersAsync()
+        {
+            var a = _context.Users.Where(u => u.IsActive == true);
 
-        public Task<List<User>> GetAllActiveUsersAsync() =>
-        _context.Users
-        .Where(u => u.IsActive)
-        .OrderBy(u => u.Lastname)
-        .ThenBy(u => u.Firstname)
-        .ToListAsync();
+            return a.ToList();
+        }
+        //public  Task<List<User>> GetAllActiveUsersAsync()
+        //{
+        //    Task<List<User>> resp = null;
+        //    try
+        //    {
 
+        //         resp = _context.Users
+        //            .Where(u => u.IsActive == true) // Use Where to filter active users
+        //            .ToListAsync(); // Use ToListAsync for asynchronous execution
+        //    }
+        //    catch (Exception ex) 
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //    }
+        //    return resp;
+        //}
         public async Task AddUserAsync(User user)
         {
             await _context.Users.AddAsync(user);
@@ -44,20 +59,12 @@ namespace DataAccess.Repositories
 
         public async Task DeactivateUserAsync(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                user.IsActive = false;
-                await _context.SaveChangesAsync();
-            }
+           var user = _context.Users.FindAsync(id);
+           
+           await _context.SaveChangesAsync();
         }
 
 
-
-        public Task DeleteUserAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<User> GetUsersByIdAsync(int id)
         {
@@ -65,6 +72,12 @@ namespace DataAccess.Repositories
             return user;
         }
 
-       
+
+
+
+        public Task GetActiveUsersAsync(int limit, int offset)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

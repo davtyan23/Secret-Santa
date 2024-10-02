@@ -4,12 +4,12 @@ namespace DataAccess.Repositories
 {
     public interface IRepository
     {
-        Task AddUserAsync(User user);
-        Task DeactivateUserAsync(int id);
-        Task DeleteUserAsync(int id);
-        Task<List<User>> GetAllActiveUsersAsync();
         Task<List<User>> GetPaginatedUsersAsync(int limit, int offset);
-        Task<User> GetUsersByIdAsync(int id);
+        List<User> GetAllActiveUsersAsync();
+        Task AddUserAsync(User user);
         Task UpdateUserAsync(User user);
+        Task DeactivateUserAsync(int id);
+        Task GetActiveUsersAsync(int limit, int offset);
+        Task<User> GetUsersByIdAsync(int id);
     }
 }

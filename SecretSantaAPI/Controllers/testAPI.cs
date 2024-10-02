@@ -2,6 +2,7 @@
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -32,9 +33,9 @@ namespace SecretSantaAPI.Controllers
 
         // GET: api/users/active
         [HttpGet("Active")]
-        public async Task<ActionResult<List<User>>> GetAllActiveUsers( int limit = 5, int offset = 0)
+        public ActionResult<List<User>> GetAllActiveUsers()
         {
-            var users = await _userService.GetAllActiveUsersAsync();
+            var users = _userService.GetAllActiveUsersAsync();
             return Ok(users);
         }
 
@@ -48,19 +49,20 @@ namespace SecretSantaAPI.Controllers
             }
             return Ok(user);
         }
-        // GET: api/users/getNumbers
-        [HttpGet("GetNumbers")]
-        public ActionResult GetNumbers()
-        {
-            var response = new
-            {
-                Message = "Current date",
-                Date = DateTime.UtcNow.ToString("yyyy/MM/dd")
-            };
-            return Ok(response);
-        }
-        
         // POST: api/users/calculate
+
+        [HttpPost("Deactivate")]
+        public async Task DeactivateUserAsync(int id)
+        {
+            var user = await _userService.GetUsersByIdAsync(id);
+            if (user != null)
+            {
+                user.IsActive = false;
+                await _userService.UpdateUsersAsync(user);
+            }
+
+        }
+
         [HttpPost("Calculate")]
         public ActionResult Post([FromBody] MathRequestDTO request)
         {
@@ -116,12 +118,6 @@ namespace SecretSantaAPI.Controllers
             return Ok("Values updated successfully");
         }
 
-        // DELETE: api/users/delete
-        [HttpDelete("Delete")]
-        public ActionResult Delete()
-        {
-            // Add your logic for deleting/resetting values here
-            return Ok("Values reset successfully");
-        }
+       
     }
 }
