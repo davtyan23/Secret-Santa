@@ -16,6 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<SecretSantaContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IRepository, Repository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // Register EmailSender as a Singleton
 builder.Services.AddSingleton<EmailSender>();

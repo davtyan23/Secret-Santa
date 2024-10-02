@@ -24,4 +24,10 @@ public class NotificationController : ControllerBase
         // Return response
         return Ok("Email sent successfully!");
     }
+    public class EmailRequest
+    {
+        public string RecipientEmail { get; set; }
+        public string Subject { get; set; }
+        public string MessageBody { get; set; }
+    }
 }
