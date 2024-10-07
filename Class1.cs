@@ -1,21 +1,8 @@
 ﻿using System;
 
-public class PairingUsers
+public class Class1
 {
-	//public string Name { get; set; }
-	//public string Surname { get; set; }
-
-	//public PairingUsers(string name, string surname) 
-	//{ 
-	//	Name = name;
-	//	Surname = surname;
-	//}
-
-	//public override string ToString()
-	//{
-	//	return $"{Name} {Surname}"
-	//}
-
-	
-	
+	public Class1()
+	{
+	}
 }
