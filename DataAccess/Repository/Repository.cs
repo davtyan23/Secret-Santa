@@ -8,7 +8,6 @@ namespace DataAccess.Repositories
     public class Repository : IRepository
     {
         private readonly SecretSantaContext _context;
-
         public Repository(SecretSantaContext context)
         {
             _context = context;
@@ -33,7 +32,6 @@ namespace DataAccess.Repositories
         //    Task<List<User>> resp = null;
         //    try
         //    {
-
         //         resp = _context.Users
         //            .Where(u => u.IsActive == true) // Use Where to filter active users
         //            .ToListAsync(); // Use ToListAsync for asynchronous execution

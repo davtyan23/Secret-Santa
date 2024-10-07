@@ -21,13 +21,12 @@ public class NotificationController : ControllerBase
         // Call the email sender method
         await _emailSender.SendEmailAsync(recipientEmail, subject, message);
 
-        // Return response
         return Ok("Email sent successfully!");
     }
     public class EmailRequest
     {
-        public string RecipientEmail { get; set; }
+        public required string RecipientEmail { get; set; }
         public string Subject { get; set; }
-        public string MessageBody { get; set; }
+        public required string MessageBody { get; set; }
     }
 }
