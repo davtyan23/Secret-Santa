@@ -1,6 +1,8 @@
 ﻿using Business;
 using Business.DTOs.Request;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mail;
+
 namespace SecretSantaAPI.Controllers
 {
     [ApiController]
@@ -14,18 +16,36 @@ namespace SecretSantaAPI.Controllers
             _authService = authService;
         }
 
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDTO request)
         {
-            var result =  await _authService.SignInAsync(request);
+            bool isValid = IsValidEmail(request.email);
+            if (!isValid)
+            {
+                return BadRequest("Invalid email format");
+            }
 
-            return Ok(result);
-            //if (result.Succeeded)
-            //{
-            //    return Ok("Login successful");
-            //}
-            //return Unauthorized("Invalid email or password");
+            var userId = await _authService.SignInAsync(request);
+            if (userId == null)
+            {
+                return Unauthorized("Invalid email or password");
+            }
+
+            return Ok(new { UserId = userId, Message = "Login successful" });
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var mailAddress = new MailAddress(email);
+                return true;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
         }
     }
 }
-

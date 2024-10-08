@@ -6,6 +6,7 @@ namespace Business
     {
         Task<int> SignInAsync(LoginRequestDTO login);
         Task<int> RegisterUserAsync(string email, string password);
+       
         //Task SignOutAsync();
     }
 

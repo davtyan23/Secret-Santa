@@ -1,4 +1,5 @@
 ﻿using Business.DTOs.Request;
+using Business.Services;
 using DataAccess.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Identity.Client;
@@ -12,6 +13,7 @@ namespace Business
 {
     public class AuthService : IAuthService
     {
+
         //private readonly UserManager<LoginRequest> _userManager; 
         //private readonly SignInManager<LoginRequest> _signInManager; // For handling sign in
 
@@ -50,12 +52,12 @@ namespace Business
         //    return await _userManager.CreateAsync(user, password);
         //}
 
+        private readonly TokenService _tokenService;
 
         public Task<int> SignInAsync(LoginRequestDTO login)
         {
             return Task.FromResult(0);  
         }
-
 
         Task<int> IAuthService.RegisterUserAsync(string email, string password)
         {
