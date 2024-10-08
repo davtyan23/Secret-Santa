@@ -16,6 +16,7 @@ public class UserService : IUserService
         return await _repository.GetPaginatedUsersAsync(limit, offset);
     }
 
+
     public List<User> GetAllActiveUsersAsync()
     {
         var result = _repository.GetAllActiveUsersAsync();  
