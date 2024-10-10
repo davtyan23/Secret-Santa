@@ -28,7 +28,7 @@ public class UserService : IUserService
         return await _repository.GetUsersByIdAsync(id);
     }
 
-    public async Task AddUsersAsync(User user)
+    public async Task AddUsersAsync(UserPass user)
     {
         await _repository.AddUserAsync(user);
     }
@@ -38,8 +38,6 @@ public class UserService : IUserService
         await _repository.UpdateUserAsync(user);
     }
 
-
-    
 
     public async Task GetActiveUsersAsync(int limit, int offset)
     {
@@ -57,6 +55,11 @@ public class UserService : IUserService
     }
 
     public Task<User> FindAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddUsersAsync(User user)
     {
         throw new NotImplementedException();
     }

@@ -61,10 +61,10 @@ public partial class SecretSantaContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC27A8DFC82C");
 
             entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.Firstname).HasMaxLength(30);
+            entity.Property(e => e.FirstName).HasMaxLength(30);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.Lastname).HasMaxLength(30);
-            entity.Property(e => e.Number).HasMaxLength(15);
+            entity.Property(e => e.LastName).HasMaxLength(30);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(15);
         });
 
         modelBuilder.Entity<UserPass>(entity =>

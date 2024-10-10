@@ -42,9 +42,14 @@ namespace DataAccess.Repositories
         //    }
         //    return resp;
         //}
-        public async Task AddUserAsync(User user)
+        public async Task AddUserAsync(UserPass user)
         {
-            await _context.Users.AddAsync(user);
+            await _context.UserPasses.AddAsync(user);
+            await _context.SaveChangesAsync();
+        }
+        public async Task AddUserAsync(UserPass user)
+        {
+            await _context.UserPasses.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 
@@ -63,7 +68,6 @@ namespace DataAccess.Repositories
         }
 
 
-
         public async Task<User> GetUsersByIdAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -71,9 +75,20 @@ namespace DataAccess.Repositories
         }
 
 
-
-
         public Task GetActiveUsersAsync(int limit, int offset)
+        {
+            throw new NotImplementedException();
+        }
+
+         public bool IsEmailRegistered(string email)
+        {
+            bool isEmailRegistered = true;
+            var user = _context.UserPasses.Where(u => u.Email == email);
+            isEmailRegistered = user.Count() > 0;
+            return isEmailRegistered;
+        }
+
+        public Task<User> GetUserByEmailAsync(string email)
         {
             throw new NotImplementedException();
         }
