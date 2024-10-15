@@ -1,4 +1,5 @@
 ﻿using Business.DTOs.Request;
+using DataAccess.Models;
 
 namespace Business
 {
@@ -6,8 +7,9 @@ namespace Business
     {
         Task<int> SignInAsync(LoginRequestDTO login);
         //Task<string> RegisterUserAsync(string email, string password);
-        Task<bool> RegisterUserAsync(RegisterRequest request);
-
+        //Task<User> RegisterUserAsync(RegisterRequest request);
+        Task<User> RegisterUserAsync(RegisterRequest request);
+        int IsValidEmail(string email);
         //Task SignOutAsync();
     }
 

@@ -42,14 +42,14 @@ namespace DataAccess.Repositories
         //    }
         //    return resp;
         //}
-        public async Task AddUserAsync(UserPass user)
+        public async Task AddUserPassesAsync(UserPass user)
         {
             await _context.UserPasses.AddAsync(user);
             await _context.SaveChangesAsync();
         }
-        public async Task AddUserAsync(UserPass user)
+        public async Task AddUserAsync(User user)
         {
-            await _context.UserPasses.AddAsync(user);
+            await _context.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 
@@ -80,12 +80,12 @@ namespace DataAccess.Repositories
             throw new NotImplementedException();
         }
 
-         public bool IsEmailRegistered(string email)
+         public int IsEmailRegistered(string email)
         {
             bool isEmailRegistered = true;
             var user = _context.UserPasses.Where(u => u.Email == email);
             isEmailRegistered = user.Count() > 0;
-            return isEmailRegistered;
+            return 0;
         }
 
         public Task<User> GetUserByEmailAsync(string email)

@@ -76,7 +76,7 @@ namespace Business
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 PhoneNumber = request.PhoneNumber,
-
+                
             };
            
             var newUser = new UserPass
@@ -86,11 +86,11 @@ namespace Business
                 CreatedAt = DateTime.Now
             };
 
-            await _repository.AddUserAsync(newUser);//pass
+            await _repository.AddUserPassesAsync(newUser);//pass
             return newUser.Email;
         }
 
-        public Task<string> RegistrationPassCheck(RegisterRequest request)
+        public async Task<string> RegistrationPassCheck(RegisterRequest request)
         {
             if (!PasswordPreCheck(request.Password))
             {
@@ -102,7 +102,7 @@ namespace Business
                 throw new ArgumentException("User with this email already exists.");
             }
 
-            return null;
+            return "Password was set successully";
         }
         public bool PasswordPreCheck(string password)
         {
@@ -116,16 +116,45 @@ namespace Business
             var user = await _repository.GetUserByEmailAsync(login.Email);
             return 0;  
         }
-
-        public Task<bool> RegisterRequest(string Email, string Password)
+        
+      
+        public Task<User> RegisterUserAsync(RegisterRequest request)
         {
-            throw new NotImplementedException();
+            var user = new User
+            { 
+                FirstName = request.FirstName,
+                LastName = request.LastName
+            };
+            var userPass = new UserPass
+            {
+                Email = request.Email,
+            };
+            //var user = await _repository.registr(request);
+            //return !(user == null);
+            return _repository.GetUserByEmailAsync(request.Email);
         }
 
-        public Task<bool> RegisterUserAsync(RegisterRequest request)
-        {
-            throw new NotImplementedException();
-        }
+          public int IsValidEmail(string email)
+          {
+            if (email.Length == 0 || email == null)
+            {
+                return -1;
+            }
+
+            int notFirstIndex = email.IndexOf('@');
+            if (notFirstIndex < 0)
+            {
+                return -2;
+            }
+
+            int dotIndex = email.IndexOf('.', notFirstIndex);
+            if (dotIndex <= notFirstIndex + 1)
+            {
+                return -3;
+            }
+
+            return 0;
+          }
     }
 }
 

@@ -21,12 +21,18 @@ namespace SecretSantaAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDTO request)
         {
-            bool isValid = IsValidEmail(request.Email);
-            if (!isValid)
+            int isValid = _authService.IsValidEmail(request.Email);
+            switch (isValid)
             {
-                return BadRequest("Invalid email format");
+                case -1:
+
+                    return BadRequest("Email field is empty");
+                case -2:
+                    return BadRequest("Invalid email format");
+                case -3:
+                    return BadRequest("Invalid email format");
             }
-                
+           
             var userId = await _authService.SignInAsync(request);
             if (userId == null)
             {
@@ -39,11 +45,18 @@ namespace SecretSantaAPI.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register(Business.RegisterRequest request)
         {
-            bool isValid = IsValidEmail(request.Email);
-            if (!isValid)
+            var isValid = _authService.IsValidEmail(request.Email);
+            switch (isValid) 
             {
-                return BadRequest("Invalid email format");
+                case -1:
+
+                    return BadRequest("Email field is empty");
+                case -2:
+                    return BadRequest("Invalid email format");
+                case -3:
+                    return BadRequest("Invalid email format");
             }
+          
                 
             var userId = await _authService.RegisterUserAsync( request);
             if (userId == null)
@@ -54,17 +67,6 @@ namespace SecretSantaAPI.Controllers
             return Ok(new { UserId = userId, Message = "Login successful" });
         }
 
-        private bool IsValidEmail(string email)
-        {
-            try
-            {
-                var mailAddress = new MailAddress(email);
-                return true;
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
-        }
+      
     }
 }
