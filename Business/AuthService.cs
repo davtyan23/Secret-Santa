@@ -70,7 +70,7 @@ namespace Business
         
         public async Task<string> Register(RegisterRequest request)
         {
-           // RegistrationPassCheck(request);
+            RegistrationPassCheck(request);
 
             var user = new User
             {

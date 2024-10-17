@@ -48,9 +48,9 @@ namespace SecretSantaAPI.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register(Business.RegisterRequest request)
         {
-            //var isValid = _authService.IsValidEmail(request.Email);
+            var isValid = _authService.IsValidEmail(request.Email);
             string resp = String.Empty;
-          /*  switch (isValid) 
+            switch (isValid) 
             {
                 case -1:
 
@@ -60,7 +60,7 @@ namespace SecretSantaAPI.Controllers
                 case -3:
                     return BadRequest("Invalid email format");
             }
-          */
+          
             try
             {
                 resp = await _authService.Register(request);
