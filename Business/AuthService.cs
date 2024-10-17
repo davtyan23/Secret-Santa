@@ -57,7 +57,6 @@ namespace Business
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));//checks its not null
         }
 
-
         public string HashPass(string password) 
         {
             using (var sha512 = SHA512.Create())
@@ -68,41 +67,38 @@ namespace Business
             }
         }
         // change input values to model 
-
+        
         public async Task<string> Register(RegisterRequest request)
         {
-            var user = new User 
-            { 
+           // RegistrationPassCheck(request);
+
+            var user = new User
+            {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 PhoneNumber = request.PhoneNumber,
-                
+                RegisterTime = DateTime.Now,
+                IsActive = true
             };
            
             var newUser = new UserPass
             {
                 Email = request.Email,
                 PassHash = HashPass(request.Password),
-                CreatedAt = DateTime.Now
+                //CreatedAt = DateTime.Now
             };
-
+            var resp = await _repository.AddUserAsync(user);
+            newUser.UserId = resp.Id;
             await _repository.AddUserPassesAsync(newUser);//pass
-            return newUser.Email;
+            return newUser.UserId.ToString();
         }
 
-        public async Task<string> RegistrationPassCheck(RegisterRequest request)
+        public void RegistrationPassCheck(RegisterRequest request)
         {
             if (!PasswordPreCheck(request.Password))
             {
                 throw new ArgumentException("Password does not meet the criteria.");
             }
-            var existingUser =  _repository.GetUserByEmailAsync(request.Email);
-            if (existingUser != null)
-            {
-                throw new ArgumentException("User with this email already exists.");
-            }
-
-            return "Password was set successully";
         }
         public bool PasswordPreCheck(string password)
         {
@@ -113,25 +109,13 @@ namespace Business
 
         public async Task<int> SignInAsync(LoginRequestDTO login)
         {
-            var user = await _repository.GetUserByEmailAsync(login.Email);
+            //var user = await _repository.GetUserByEmailAsync(login.Email);
             return 0;  
         }
-        
-      
-        public Task<User> RegisterUserAsync(RegisterRequest request)
+
+        public IRepository Get_repository()
         {
-            var user = new User
-            { 
-                FirstName = request.FirstName,
-                LastName = request.LastName
-            };
-            var userPass = new UserPass
-            {
-                Email = request.Email,
-            };
-            //var user = await _repository.registr(request);
-            //return !(user == null);
-            return _repository.GetUserByEmailAsync(request.Email);
+            return _repository;
         }
 
           public int IsValidEmail(string email)
@@ -155,6 +139,7 @@ namespace Business
 
             return 0;
           }
+
     }
 }
 

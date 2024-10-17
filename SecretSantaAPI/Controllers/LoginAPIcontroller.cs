@@ -1,5 +1,6 @@
 ﻿using Business;
 using Business.DTOs.Request;
+using DataAccess.Repositories;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mail;
@@ -11,10 +12,12 @@ namespace SecretSantaAPI.Controllers
     public class LoginController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IRepository _repository;
 
-        public LoginController(IAuthService authService)
+        public LoginController(IAuthService authService, IRepository repository)
         {
             _authService = authService;
+            _repository = repository;
         }
 
 
@@ -45,8 +48,9 @@ namespace SecretSantaAPI.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register(Business.RegisterRequest request)
         {
-            var isValid = _authService.IsValidEmail(request.Email);
-            switch (isValid) 
+            //var isValid = _authService.IsValidEmail(request.Email);
+            string resp = String.Empty;
+          /*  switch (isValid) 
             {
                 case -1:
 
@@ -56,15 +60,17 @@ namespace SecretSantaAPI.Controllers
                 case -3:
                     return BadRequest("Invalid email format");
             }
-          
-                
-            var userId = await _authService.RegisterUserAsync( request);
-            if (userId == null)
+          */
+            try
             {
-                return Unauthorized("Invalid email or password");
+                resp = await _authService.Register(request);
             }
-
-            return Ok(new { UserId = userId, Message = "Login successful" });
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = $"Registration failed: {ex.Message}" });
+            }
+             
+            return Ok(new { UserId = resp, Message = "Register was successful" });
         }
 
       

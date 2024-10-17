@@ -12,6 +12,7 @@ public partial class User
     public string LastName { get; set; } = null!;
 
     public string PhoneNumber { get; set; } = null!;
+    public DateTime RegisterTime { get; set; }
 
     public bool IsActive { get; set; }
 

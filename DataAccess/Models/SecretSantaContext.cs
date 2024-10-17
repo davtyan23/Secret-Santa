@@ -19,9 +19,9 @@ public partial class SecretSantaContext : DbContext
 
     public virtual DbSet<Role> Roles { get; set; }
 
-    public virtual DbSet<User> Users { get; set; }
+    public DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserPass> UserPasses { get; set; }
+    public DbSet<UserPass> UserPasses { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Data Source = INTERN-IS\\MSSQLSERVER01; Initial Catalog = SecretSanta; Integrated Security = True; Trust Server Certificate = True");

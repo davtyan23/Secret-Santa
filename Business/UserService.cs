@@ -51,8 +51,8 @@ public class UserService : IUserService
         throw new NotImplementedException();
     }
 
-    public Task AddUsersAsync(User user)
+    public Task<User> AddUsersAsync(User user)
     {
-        throw new NotImplementedException();
+        return  _repository.AddUserAsync(user);
     }
-}     
+}

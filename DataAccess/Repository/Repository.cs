@@ -13,10 +13,10 @@ namespace DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
+        public Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
         {
-
-            return await _context.Users
+            
+            return  _context.Users
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
@@ -44,13 +44,31 @@ namespace DataAccess.Repositories
         //}
         public async Task AddUserPassesAsync(UserPass user)
         {
+            var a = user.PassHash.Count();
+            user.PassHash = user.PassHash.Substring(0,20);
             await _context.UserPasses.AddAsync(user);
-            await _context.SaveChangesAsync();
-        }
-        public async Task AddUserAsync(User user)
+            try {
+                
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            }
+
+        public async Task<User> AddUserAsync(User user)
         {
             await _context.AddAsync(user);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return user;
         }
 
         public async Task UpdateUserAsync(User user)
@@ -75,9 +93,13 @@ namespace DataAccess.Repositories
         }
 
 
-        public Task GetActiveUsersAsync(int limit, int offset)
+        public async Task<List<User>> GetActiveUsersAsync(int limit, int offset)
         {
-            throw new NotImplementedException();
+        return await _context.Users
+            .Where(u => u.IsActive)
+            .Skip(offset)
+            .Take(limit)
+            .ToListAsync();
         }
 
          public int IsEmailRegistered(string email)
@@ -88,9 +110,10 @@ namespace DataAccess.Repositories
             return 0;
         }
 
-        public Task<User> GetUserByEmailAsync(string email)
+       
+        public User GetUserByEmail(string email)
         {
-            throw new NotImplementedException();
+            return _context.UserPasses.FirstOrDefault(u => u.Email == email).User;
         }
     }
 }
