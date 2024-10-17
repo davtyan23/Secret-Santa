@@ -109,14 +109,14 @@ namespace Business
 
         public async Task<int> SignInAsync(LoginRequestDTO login)
         {
-            //var user = await _repository.GetUserByEmailAsync(login.Email);
-            return 0;  
+            var user = await _repository.GetUserByEmailAsync(login.Email);
+            return user.Id;  
         }
 
-        public IRepository Get_repository()
+     /*   public IRepository Get_repository()
         {
             return _repository;
-        }
+        }*/
 
           public int IsValidEmail(string email)
           {

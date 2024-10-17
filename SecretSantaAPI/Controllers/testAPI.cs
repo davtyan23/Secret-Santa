@@ -15,13 +15,17 @@ namespace SecretSantaAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IRepository _repository;
         private readonly Random _random = new Random();
 
         // Inject the IUserService into the controller
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, IRepository repository)
         {
             _userService = userService;
+            _repository = repository;
         }
+
+        
 
         // GET: api/users/paginated
         [HttpGet("Paginated")]
@@ -61,6 +65,17 @@ namespace SecretSantaAPI.Controllers
                 await _userService.UpdateUsersAsync(user);
             }
 
+        }
+
+        [HttpPost("GetUserByEmail")]
+        public async Task<ActionResult<UserPass>> GetUserByEmailAsync(string email)
+        {
+            var user = await _repository.GetUserByEmailAsync(email);
+            if( user == null)
+            {
+                return NotFound($"User with that {email} not found.");
+            }
+            return user;
         }
 
         [HttpPost("Calculate")]

@@ -12,6 +12,6 @@ namespace DataAccess.Repositories
         Task<List<User>> GetActiveUsersAsync(int limit, int offset);
         Task<User> GetUsersByIdAsync(int id);
         Task<User> AddUserAsync(User user);
-        User GetUserByEmail(string email);
+        Task<UserPass> GetUserByEmailAsync(string email);
     }
 }

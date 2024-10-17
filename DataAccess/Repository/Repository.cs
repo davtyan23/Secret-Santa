@@ -110,10 +110,15 @@ namespace DataAccess.Repositories
             return 0;
         }
 
-       
-        public User GetUserByEmail(string email)
+
+        public async Task<UserPass> GetUserByEmailAsync(string email)
         {
-            return _context.UserPasses.FirstOrDefault(u => u.Email == email).User;
+            var result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
+            if (result == null)
+            {
+                return new UserPass { };
+            }
+            else return result;
         }
     }
 }
