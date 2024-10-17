@@ -1,13 +1,9 @@
 ﻿using Business.DTOs.Request;
-using Business.Services;
 using DataAccess.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using DataAccess.Repositories;
+using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Business
 {
@@ -52,17 +48,98 @@ namespace Business
         //    return await _userManager.CreateAsync(user, password);
         //}
 
-        private readonly TokenService _tokenService;
-
-        public Task<int> SignInAsync(LoginRequestDTO login)
+        //private readonly UserService _userService;
+       
+        
+        private readonly IRepository _repository;
+        public AuthService (IRepository repository)
         {
-            return Task.FromResult(0);  
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));//checks its not null
         }
 
-        Task<int> IAuthService.RegisterUserAsync(string email, string password)
+        public string HashPass(string password) 
         {
-            throw new NotImplementedException();
+            using (var sha512 = SHA512.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var hash = sha512.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
         }
+        // change input values to model 
+        
+        public async Task<string> Register(RegisterRequest request)
+        {
+            RegistrationPassCheck(request);
+
+            var user = new User
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                PhoneNumber = request.PhoneNumber,
+                RegisterTime = DateTime.Now,
+                IsActive = true
+            };
+           
+            var newUser = new UserPass
+            {
+                Email = request.Email,
+                PassHash = HashPass(request.Password),
+                //CreatedAt = DateTime.Now
+            };
+            var resp = await _repository.AddUserAsync(user);
+            newUser.UserId = resp.Id;
+            await _repository.AddUserPassesAsync(newUser);//pass
+            return newUser.UserId.ToString();
+        }
+
+        public void RegistrationPassCheck(RegisterRequest request)
+        {
+            if (!PasswordPreCheck(request.Password))
+            {
+                throw new ArgumentException("Password does not meet the criteria.");
+            }
+        }
+        public bool PasswordPreCheck(string password)
+        {
+            var regex = new Regex(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{10,}$");
+            //email validation
+            return regex.IsMatch(password);
+        }
+
+        public async Task<int> SignInAsync(LoginRequestDTO login)
+        {
+            //var user = await _repository.GetUserByEmailAsync(login.Email);
+            return 0;  
+        }
+
+        public IRepository Get_repository()
+        {
+            return _repository;
+        }
+
+          public int IsValidEmail(string email)
+          {
+            if (email.Length == 0 || email == null)
+            {
+                return -1;
+            }
+
+            int notFirstIndex = email.IndexOf('@');
+            if (notFirstIndex < 0)
+            {
+                return -2;
+            }
+
+            int dotIndex = email.IndexOf('.', notFirstIndex);
+            if (dotIndex <= notFirstIndex + 1)
+            {
+                return -3;
+            }
+
+            return 0;
+          }
+
     }
 }
 

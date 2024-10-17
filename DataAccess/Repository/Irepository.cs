@@ -6,10 +6,12 @@ namespace DataAccess.Repositories
     {
         Task<List<User>> GetPaginatedUsersAsync(int limit, int offset);
         List<User> GetAllActiveUsersAsync();
-        Task AddUserAsync(User user);
+        Task AddUserPassesAsync(UserPass user);
         Task UpdateUserAsync(User user);
         Task DeactivateUserAsync(int id);
-        Task GetActiveUsersAsync(int limit, int offset);
+        Task<List<User>> GetActiveUsersAsync(int limit, int offset);
         Task<User> GetUsersByIdAsync(int id);
+        Task<User> AddUserAsync(User user);
+        User GetUserByEmail(string email);
     }
 }

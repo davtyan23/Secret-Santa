@@ -1,13 +1,15 @@
 ﻿using Business.DTOs.Request;
+using DataAccess.Models;
+using DataAccess.Repositories;
 
 namespace Business
 {
     public interface IAuthService
     {
         Task<int> SignInAsync(LoginRequestDTO login);
-        Task<int> RegisterUserAsync(string email, string password);
-       
-        //Task SignOutAsync();
+        Task<string> Register(RegisterRequest request);
+        int IsValidEmail(string email);
+
     }
 
    

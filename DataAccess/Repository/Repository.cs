@@ -13,10 +13,10 @@ namespace DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
+        public Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
         {
-
-            return await _context.Users
+            
+            return  _context.Users
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
@@ -42,10 +42,33 @@ namespace DataAccess.Repositories
         //    }
         //    return resp;
         //}
-        public async Task AddUserAsync(User user)
+        public async Task AddUserPassesAsync(UserPass user)
         {
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            var a = user.PassHash.Count();
+            user.PassHash = user.PassHash.Substring(0,20);
+            await _context.UserPasses.AddAsync(user);
+            try {
+                
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            }
+
+        public async Task<User> AddUserAsync(User user)
+        {
+            await _context.AddAsync(user);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return user;
         }
 
         public async Task UpdateUserAsync(User user)
@@ -63,7 +86,6 @@ namespace DataAccess.Repositories
         }
 
 
-
         public async Task<User> GetUsersByIdAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -71,11 +93,27 @@ namespace DataAccess.Repositories
         }
 
 
-
-
-        public Task GetActiveUsersAsync(int limit, int offset)
+        public async Task<List<User>> GetActiveUsersAsync(int limit, int offset)
         {
-            throw new NotImplementedException();
+        return await _context.Users
+            .Where(u => u.IsActive)
+            .Skip(offset)
+            .Take(limit)
+            .ToListAsync();
+        }
+
+         public int IsEmailRegistered(string email)
+        {
+            bool isEmailRegistered = true;
+            var user = _context.UserPasses.Where(u => u.Email == email);
+            isEmailRegistered = user.Count() > 0;
+            return 0;
+        }
+
+       
+        public User GetUserByEmail(string email)
+        {
+            return _context.UserPasses.FirstOrDefault(u => u.Email == email).User;
         }
     }
 }
