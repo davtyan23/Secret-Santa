@@ -106,19 +106,30 @@ namespace Business
             //email validation
             return regex.IsMatch(password);
         }
-
-        public async Task<int> SignInAsync(LoginRequestDTO login)
+        //ste tema ka
+        public async Task<UserPass> SignInAsync(LoginRequestDTO login)
         {
             var user = await _repository.GetUserByEmailAsync(login.Email);
-            return user.Id;  
+            return user;  
         }
 
-     /*   public IRepository Get_repository()
+        /*   public IRepository Get_repository()
+           {
+               return _repository;
+           }*/
+        public bool VerifyPass(string enteredPassword, string storedHash)
         {
-            return _repository;
-        }*/
-
-          public int IsValidEmail(string email)
+            try
+            {
+                string hashEnteredPassword = HashPass(enteredPassword);
+                return hashEnteredPassword == storedHash;
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+        public int IsValidEmail(string email)
           {
             if (email.Length == 0 || email == null)
             {

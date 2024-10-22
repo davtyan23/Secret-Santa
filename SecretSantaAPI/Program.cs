@@ -1,4 +1,5 @@
 using Business;
+using Business.Services;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//builder.Services.AddAuthentication();
+//builder.services.addauthentication();
 builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -23,6 +24,9 @@ builder.Services.AddScoped<IRepository, Repository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Register TokenService
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // Register EmailSender as a Singleton
 builder.Services.AddSingleton<EmailSender>();

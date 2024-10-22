@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace Business.Services
 {
-    public class TokenService
+    public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
 
@@ -21,7 +21,6 @@ namespace Business.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             // Create signing credentials

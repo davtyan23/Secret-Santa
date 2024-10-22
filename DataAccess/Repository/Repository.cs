@@ -45,7 +45,7 @@ namespace DataAccess.Repositories
         public async Task AddUserPassesAsync(UserPass user)
         {
             var a = user.PassHash.Count();
-            user.PassHash = user.PassHash.Substring(0,20);
+            user.PassHash = user.PassHash;
             await _context.UserPasses.AddAsync(user);
             try {
                 

@@ -1,9 +1,7 @@
 ﻿using Business;
 using Business.DTOs.Request;
 using DataAccess.Repositories;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Mail;
 
 namespace SecretSantaAPI.Controllers
 {
@@ -13,13 +11,15 @@ namespace SecretSantaAPI.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IRepository _repository;
-
-        public LoginController(IAuthService authService, IRepository repository)
+        private readonly ITokenService _tokenService;
+        public LoginController(IAuthService authService, IRepository repository, ITokenService tokenService)
         {
             _authService = authService;
             _repository = repository;
+            _tokenService = tokenService;
         }
 
+      
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDTO request)
@@ -36,13 +36,41 @@ namespace SecretSantaAPI.Controllers
                     return BadRequest("Invalid email format");
             }
            
-            var userId = await _authService.SignInAsync(request);
-            if (userId == null)
+            var userPass = await _authService.SignInAsync(request);
+            if (userPass == null || userPass.UserId == 0 )
             {
                 return Unauthorized("Invalid email or password");
             }
 
-            return Ok(new { UserId = userId, Message = "Login successful" });
+            bool isPassValid = _authService.VerifyPass(request.Password, userPass.PassHash);
+
+            if (!isPassValid)
+            {
+                return Unauthorized("Invalid email or password");
+            }
+            var user = await _repository.GetUsersByIdAsync(userPass.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+            var email = userPass.Email;
+            var userId = userPass.UserId;
+            var token = _tokenService.CreateToken(userPass.UserId.ToString());
+
+            
+            return Ok(new
+            {
+                User = new
+                {
+                    UserId = userId,
+                    FirstName = user.FirstName,   
+                    LastName = user.LastName,
+                    Email = email
+
+                },
+                Token = token,
+                Message = "Login successful"
+            });
         }
 
         [HttpPost("Register")]
