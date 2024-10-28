@@ -5,16 +5,21 @@ using DataAccess.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SecretSantaAPI.Controllers;
 using System.Text;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//builder.services.addauthentication();
-builder.Services.AddAuthorization();
+
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ParticipantPolicy", policy =>
+    policy.RequireRole("Participant"));
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -24,8 +29,9 @@ builder.Services.AddScoped<IRepository, Repository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
 // Register TokenService
+builder.Services.AddSingleton<ILoggerAPI, LoggerAPI>();
+
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 // Register EmailSender as a Singleton
@@ -34,8 +40,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters()
+    options.TokenValidationParameters = new TokenValidationParameters
     {
+        RequireExpirationTime = true,
+        ValidateLifetime = true,
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
@@ -43,6 +51,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

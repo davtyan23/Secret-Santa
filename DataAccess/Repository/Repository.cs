@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Data.Entity;
-using DataAccess.Models; 
-using Microsoft.EntityFrameworkCore;
+//using System.Data.Entity;
+using DataAccess.Models;
+using Microsoft.EntityFrameworkCore; 
+
 
 namespace DataAccess.Repositories
 {
@@ -119,6 +120,36 @@ namespace DataAccess.Repositories
                 return new UserPass { };
             }
             else return result;
+        }
+
+        public async Task<AssignedRole> GetRoleByUserIdAsync(int userId)
+        {
+            return await _context.AssignedRoles
+                .Include(ar => ar.Role)
+                .FirstOrDefaultAsync(ar => ar.UserId == userId) ?? new AssignedRole();
+        }
+
+        public async Task<AssignedRole> RoleAssigning(int userId, int roleId)
+        {
+            var role = await _context.AssignedRoles.FindAsync(roleId);
+            if(role == null)
+            {
+                throw new Exception("User not found");
+            }
+            var assignedRole = await _context.AssignedRoles.FirstOrDefaultAsync(ar => ar.UserId == userId && ar.RoleId == roleId);
+            if(assignedRole == null)
+            {
+                return assignedRole;
+            }
+            var newAssignedRole = new AssignedRole
+            {
+                UserId = userId,
+                RoleId = roleId
+            };
+
+            await _context.AssignedRoles.AddAsync(newAssignedRole);
+            await _context.SaveChangesAsync();
+            return newAssignedRole;
         }
     }
 }

@@ -15,12 +15,14 @@ namespace Business.Services
             _configuration = configuration;
         }
 
-        public string CreateToken(string userId)
+        public string CreateToken(string userId, string role)
         {
             // Define claims
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(ClaimTypes.Role, role),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             // Create signing credentials
@@ -32,11 +34,13 @@ namespace Business.Services
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.Now.AddHours(4),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+     
     }
 }

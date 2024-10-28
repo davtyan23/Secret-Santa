@@ -13,6 +13,8 @@ public partial class UserPass
 
     public string PassHash { get; set; } = null!;
 
+    //public string Role {  get; set; } = null!;
+
     public virtual User User { get; set; } = null!;
     
 }

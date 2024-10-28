@@ -65,6 +65,7 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.LastName).HasMaxLength(30);
             entity.Property(e => e.PhoneNumber).HasMaxLength(15);
+            entity.ToTable(tb => tb.HasTrigger("trg_AddDefaultRole"));
         });
 
         modelBuilder.Entity<UserPass>(entity =>

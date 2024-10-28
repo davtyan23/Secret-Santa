@@ -22,7 +22,7 @@ namespace SecretSantaAPI.Controllers
       
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginRequestDTO request)
+        public async Task<IActionResult> Login([FromBody]LoginRequestDTO request)
         {
             int isValid = _authService.IsValidEmail(request.Email);
             switch (isValid)
@@ -49,15 +49,24 @@ namespace SecretSantaAPI.Controllers
                 return Unauthorized("Invalid email or password");
             }
             var user = await _repository.GetUsersByIdAsync(userPass.UserId);
+                var role = await _repository.GetRoleByUserIdAsync(userPass.UserId);
             if (user == null)
             {
                 return NotFound("User not found");
             }
+            if (role == null)
+            {
+                return BadRequest("No role assigned to this user.");
+            }
+            if (string.IsNullOrEmpty(role.Role.RoleName))
+            {
+                return BadRequest("Role has no name assigned.");
+            }
             var email = userPass.Email;
             var userId = userPass.UserId;
-            var token = _tokenService.CreateToken(userPass.UserId.ToString());
+            var token = _tokenService.CreateToken(userPass.UserId.ToString(), role.Role.RoleName);
+            Console.WriteLine($"Role Name: {role?.Role.RoleName}");
 
-            
             return Ok(new
             {
                 User = new
