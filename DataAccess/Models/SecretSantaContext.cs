@@ -36,13 +36,13 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
-            entity.HasOne(d => d.Role).WithMany(p => p.AssignedRoles)
-                .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__AssignedR__RoleI__4222D4EF");
+            //entity.HasOne(d => d.RoleId.ToString()).WithMany()
+            //    .HasForeignKey(d => d.RoleId)
+            //    .HasConstraintName("FK__AssignedR__RoleI__4222D4EF");
 
-            entity.HasOne(d => d.User).WithMany(p => p.AssignedRoles)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__AssignedR__UserI__412EB0B6");
+            //entity.HasOne(d => d.UserId.ToString()).WithMany()
+            //    .HasForeignKey(d => d.UserId)
+            //    .HasConstraintName("FK__AssignedR__UserI__412EB0B6");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -65,6 +65,7 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.LastName).HasMaxLength(30);
             entity.Property(e => e.PhoneNumber).HasMaxLength(15);
+            entity.ToTable(tb => tb.HasTrigger("trg_AddDefaultRole"));
         });
 
         modelBuilder.Entity<UserPass>(entity =>

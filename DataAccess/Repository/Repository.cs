@@ -1,16 +1,20 @@
 ﻿using System;
-using System.Data.Entity;
-using DataAccess.Models; 
-using Microsoft.EntityFrameworkCore;
+//using System.Data.Entity;
+using DataAccess.Models;
+using Microsoft.EntityFrameworkCore; 
+
 
 namespace DataAccess.Repositories
 {
     public class Repository : IRepository
     {
         private readonly SecretSantaContext _context;
-        public Repository(SecretSantaContext context)
+        private readonly ILoggerAPI _loggerAPI;
+
+        public Repository(SecretSantaContext context, ILoggerAPI loggerAPI)
         {
             _context = context;
+            _loggerAPI = loggerAPI;
         }
 
         public Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
@@ -45,7 +49,7 @@ namespace DataAccess.Repositories
         public async Task AddUserPassesAsync(UserPass user)
         {
             var a = user.PassHash.Count();
-            user.PassHash = user.PassHash.Substring(0,20);
+            user.PassHash = user.PassHash;
             await _context.UserPasses.AddAsync(user);
             try {
                 
@@ -91,6 +95,12 @@ namespace DataAccess.Repositories
             var user = await _context.Users.FindAsync(id);
             return user;
         }
+          public async Task<string> GetRoleById(int id)
+        {
+            var role = await _context.Roles.FindAsync(id);
+            var roleName = role == null ? null : role.RoleName;
+            return roleName;
+        }
 
 
         public async Task<List<User>> GetActiveUsersAsync(int limit, int offset)
@@ -120,5 +130,48 @@ namespace DataAccess.Repositories
             }
             else return result;
         }
+
+        public async Task<AssignedRole> GetRoleByUserIdAsync(int userId)
+        {
+            return await _context.AssignedRoles
+                .FirstOrDefaultAsync(ar => ar.UserId == userId) ?? new AssignedRole();
+        }
+
+        public async Task<AssignedRole> RoleAssigning(int userId, int roleId)
+        {
+            var role = await _context.Roles.FindAsync(roleId);
+            if (role == null)
+            {
+                _loggerAPI.Error($"Role with ID {roleId} not found.");
+                throw new Exception("Not existing role");
+            }
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                _loggerAPI.Error($"User with ID {userId} not found.");
+                throw new Exception("User does not exist");
+            }
+
+            var assignedRole = await _context.AssignedRoles
+                .FirstOrDefaultAsync(ar => ar.UserId == userId && ar.RoleId == roleId);
+
+            if (assignedRole != null)
+            {
+                _loggerAPI.Warn($"User ID {userId} already has role ID {roleId} assigned.");
+                return assignedRole; 
+            }
+
+            var newAssignedRole = new AssignedRole
+            {
+                UserId = userId,
+                RoleId = roleId
+            };
+
+            await _context.AssignedRoles.AddAsync(newAssignedRole);
+            await _context.SaveChangesAsync();
+            return newAssignedRole;
+        }
+
     }
 }

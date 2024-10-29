@@ -13,5 +13,8 @@ namespace DataAccess.Repositories
         Task<User> GetUsersByIdAsync(int id);
         Task<User> AddUserAsync(User user);
         Task<UserPass> GetUserByEmailAsync(string email);
+        Task<AssignedRole> GetRoleByUserIdAsync(int userId);
+        Task<AssignedRole> RoleAssigning(int userId, int roleId);
+        Task<string> GetRoleById(int id);
     }
 }

@@ -6,10 +6,10 @@ namespace Business
 {
     public interface IAuthService
     {
-        Task<int> SignInAsync(LoginRequestDTO login);
+        Task<UserPass> SignInAsync(LoginRequestDTO login);
         Task<string> Register(RegisterRequest request);
         int IsValidEmail(string email);
-
+        bool VerifyPass(string enteredPassword, string storedHash);
     }
 
    
