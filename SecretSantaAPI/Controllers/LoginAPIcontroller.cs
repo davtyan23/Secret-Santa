@@ -58,14 +58,15 @@ namespace SecretSantaAPI.Controllers
             {
                 return BadRequest("No role assigned to this user.");
             }
-            if (string.IsNullOrEmpty(role.Role.RoleName))
+            if (string.IsNullOrEmpty(role.RoleId.ToString()))
             {
                 return BadRequest("Role has no name assigned.");
             }
             var email = userPass.Email;
             var userId = userPass.UserId;
-            var token = _tokenService.CreateToken(userPass.UserId.ToString(), role.Role.RoleName);
-            Console.WriteLine($"Role Name: {role?.Role.RoleName}");
+            var roleName = await _repository.GetRoleById (role.RoleId);
+            var token = _tokenService.CreateToken(userPass.UserId.ToString(), roleName);
+            Console.WriteLine($"Role Id: {role.RoleId}");
 
             return Ok(new
             {

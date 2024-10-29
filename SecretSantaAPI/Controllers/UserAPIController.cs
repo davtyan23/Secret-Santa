@@ -1,6 +1,8 @@
 ﻿using Business;
+using DataAccess;
 using DataAccess.DTOs;
 using DataAccess.Repositories;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SecretSantaAPI.Controllers;
@@ -26,7 +28,7 @@ namespace SecretSantaAPI.Controllers
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Participant")]
+[Authorize(Policy = "ParticipantPolicy")]
 public class SampleController : ControllerBase
 {
     private readonly ILoggerAPI _loggerAPI;
@@ -34,13 +36,13 @@ public class SampleController : ControllerBase
     public SampleController(IRepository repository, ILoggerAPI logger)
     {
          _repository = repository;
-        _loggerAPI = logger;
+         _loggerAPI = logger;
     }
 
     [HttpGet("Data")]
     public IActionResult GetData()
     {
-        var name = User.Identity.Name;
+        var name = User.FindFirst("name")?.Value ?? User.Identity.Name;
         var customClaim = User.FindFirst("CustomClaim")?.Value;
         var idClaim = User.FindFirst("id")?.Value;
 
@@ -56,12 +58,14 @@ public class SampleController : ControllerBase
     }
 
     [HttpPost("AssignedRoles")]
-    [Authorize(Roles = "Participant")] // Protect this controller or action
+    // Protect this controller or action
     public async Task<IActionResult> AssignRole([FromBody] RoleAssignDTO request)
     {
+        _loggerAPI.Info($"Assigning Role: UserId={request.UserId}, RoleId={request.RoleId}");
         try
         {
-            var assignedRole = await _repository.RoleAssigning(request.UserId, request.RoleId); // call the method from your repository
+            var assignedRole = await _repository.RoleAssigning(request.UserId, request.RoleId);
+
             return Ok(new
             {
                 message = "Role has been assigned successfully.",
