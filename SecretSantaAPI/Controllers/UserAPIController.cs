@@ -1,11 +1,13 @@
 ﻿using Business;
 using DataAccess;
+using DataAccess.Models;
 using DataAccess.DTOs;
 using DataAccess.Repositories;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SecretSantaAPI.Controllers;
+using Business.Services;
+using Business.DTOs.Request;
 
 namespace SecretSantaAPI.Controllers
 {
@@ -15,49 +17,59 @@ namespace SecretSantaAPI.Controllers
         private readonly IRepository _repository;
         private readonly ITokenService _tokenService;
         private readonly ILoggerAPI _loggerAPI; 
-
-        public UserAPIController(IAuthService authService, IRepository repository, ITokenService tokenService, ILoggerAPI logger)
+        private readonly IEmailSender _emailSender;
+        
+        public UserAPIController(IAuthService authService, IRepository repository, ITokenService tokenService, ILoggerAPI logger, IEmailSender emailSender)
         {
             _authService = authService;
             _repository = repository;
             _tokenService = tokenService;
-            _loggerAPI = logger; 
+            _loggerAPI = logger;
+            _emailSender = emailSender;
+            
         }
     }
 }
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "ParticipantPolicy")]
 public class SampleController : ControllerBase
 {
     private readonly ILoggerAPI _loggerAPI;
     private readonly IRepository _repository;
-    public SampleController(IRepository repository, ILoggerAPI logger)
+    private readonly IEmailSender _emailSender;
+    public SampleController(IRepository repository, ILoggerAPI logger, IEmailSender emailSender)
     {
-         _repository = repository;
-         _loggerAPI = logger;
+        _repository = repository;
+        _loggerAPI = logger;
+        _emailSender = emailSender;
     }
 
-    [HttpGet("Data")]
-    public IActionResult GetData()
+    [HttpPut("ResetPassword")]
+    public async Task<IActionResult> ResetPassw([FromBody]string Email)
     {
-        var name = User.FindFirst("name")?.Value ?? User.Identity.Name;
-        var customClaim = User.FindFirst("CustomClaim")?.Value;
-        var idClaim = User.FindFirst("id")?.Value;
-
-        _loggerAPI.Info($"User Name: {name}, Custom Claim: {customClaim}, ID Claim: {idClaim}");
-
-        return Ok(new
+   
+        int confirmation = Generate6Numbers();
+        var user = await _repository.GetUserByEmailAsync(Email);
+        if (user == null)
         {
-            Message = "Here is your data",
-            Id = idClaim,
-            Name = name,
-            CustomClaim = customClaim
-        });
+            return NotFound("user not found");
+        }
+        string subject = "Password Reset Confirmation Code";
+        string message = $"Your confirmation code for resetting your password is: {confirmation}";
+
+        return Ok(new { Message = "Confirmation code sent successfully to your email." });
     }
 
+    private int Generate6Numbers()
+    {
+        Random random = new Random();
+
+        return random.Next(100000, 999999);
+    }
     [HttpPost("AssignedRoles")]
+    [Authorize(Policy = "ParticipantPolicy")]
+
     // Protect this controller or action
     public async Task<IActionResult> AssignRole([FromBody] RoleAssignDTO request)
     {
