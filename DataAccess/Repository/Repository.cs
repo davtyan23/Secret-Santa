@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 //using System.Data.Entity;
 using DataAccess.Models;
 using DataAccess.UserViewModels;

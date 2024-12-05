@@ -7,7 +7,7 @@ namespace Business
         Task<List<User>> GetPaginatedUsersAsync(int limit, int offset);
         List<User> GetAllActiveUsersAsync();
         Task<User> GetUsersByIdAsync(int id);
-        Task AddUsersAsync(User user);
+        Task<User> AddUsersAsync(User user);
         Task UpdateUsersAsync(User user);
         Task DeactivateUsersAsync(int isActive);
     }
