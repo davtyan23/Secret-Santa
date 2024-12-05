@@ -1,4 +1,6 @@
-﻿using Business;
+using Business;
+using Business.DTOs;
+using DataAccess;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -16,20 +18,35 @@ namespace SecretSantaAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IRepository _repository;
+        private readonly ILoggerAPI _logger;
         private readonly Random _random = new Random();
 
         // Inject the IUserService into the controller
-        public UsersController(IUserService userService, IRepository repository)
+        public UsersController(IUserService userService, IRepository repository,ILoggerAPI logger)
         {
             _userService = userService;
             _repository = repository;
+            _logger = logger;
         }
 
-        
+        [HttpGet("all")]
+        public async Task<ActionResult<List<DataAccess.Models.User>>> GetAllUsers()
+        {
+            try
+            {
+                var users = await _repository.GetAllUsersAsync();
+                return Ok(users); 
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
 
         // GET: api/users/paginated
         [HttpGet("Paginated")]
-        public async Task<ActionResult<List<User>>> GetPaginatedUsers( int limit = 5,  int offset = 0)
+        public async Task<ActionResult<List<DataAccess.Models.User>>> GetPaginatedUsers( int limit = 5,  int offset = 0)
         {
             var users = await _userService.GetPaginatedUsersAsync(limit, offset);
             return Ok(users);
@@ -37,14 +54,14 @@ namespace SecretSantaAPI.Controllers
 
         // GET: api/users/active
         [HttpGet("Active")]
-        public ActionResult<List<User>> GetAllActiveUsers()
+        public ActionResult<List<DataAccess.Models.User>> GetAllActiveUsers()
         {
             var users = _userService.GetAllActiveUsersAsync();
             return Ok(users);
         }
 
         [HttpGet("ById")]
-        public async Task<ActionResult<User>> GetUsersById(int id)
+        public async Task<ActionResult<DataAccess.Models.User>> GetUsersById(int id)
         {
             var user = await _userService.GetUsersByIdAsync(id);
             if (user == null)
@@ -65,17 +82,6 @@ namespace SecretSantaAPI.Controllers
                 await _userService.UpdateUsersAsync(user);
             }
 
-        }
-
-        [HttpPost("GetUserByEmail")]
-        public async Task<ActionResult<UserPass>> GetUserByEmailAsync(string email)
-        {
-            var user = await _repository.GetUserByEmailAsync(email);
-            if( user == null)
-            {
-                return NotFound($"User with that {email} not found.");
-            }
-            return user;
         }
 
         [HttpPost("Calculate")]

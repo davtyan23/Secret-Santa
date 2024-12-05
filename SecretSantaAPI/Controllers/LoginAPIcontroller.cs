@@ -1,5 +1,6 @@
-﻿using Business;
+using Business;
 using Business.DTOs.Request;
+using Business.Services;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,25 +20,24 @@ namespace SecretSantaAPI.Controllers
             _tokenService = tokenService;
         }
 
-      
+
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody]LoginRequestDTO request)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {
             int isValid = _authService.IsValidEmail(request.Email);
             switch (isValid)
             {
                 case -1:
-
                     return BadRequest("Email field is empty");
                 case -2:
                     return BadRequest("Invalid email format");
                 case -3:
                     return BadRequest("Invalid email format");
             }
-           
+
             var userPass = await _authService.SignInAsync(request);
-            if (userPass == null || userPass.UserId == 0 )
+            if (userPass == null || userPass.UserId == 0)
             {
                 return Unauthorized("Invalid email or password");
             }
@@ -64,7 +64,7 @@ namespace SecretSantaAPI.Controllers
             }
             var email = userPass.Email;
             var userId = userPass.UserId;
-            var roleName = await _repository.GetRoleById (role.RoleId);
+            var roleName = await _repository.GetRoleById(role.RoleId);
             var token = _tokenService.CreateToken(userPass.UserId.ToString(), roleName);
             Console.WriteLine($"Role Id: {role.RoleId}");
 
@@ -73,7 +73,7 @@ namespace SecretSantaAPI.Controllers
                 User = new
                 {
                     UserId = userId,
-                    FirstName = user.FirstName,   
+                    FirstName = user.FirstName,
                     LastName = user.LastName,
                     Email = email
 
@@ -88,29 +88,42 @@ namespace SecretSantaAPI.Controllers
         {
             var isValid = _authService.IsValidEmail(request.Email);
             string resp = String.Empty;
-            switch (isValid) 
+
+            switch (isValid)
             {
                 case -1:
-
                     return BadRequest("Email field is empty");
                 case -2:
                     return BadRequest("Invalid email format");
                 case -3:
                     return BadRequest("Invalid email format");
             }
-          
+
+            var registerDto = new RegisterRequestDTO
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                Password = request.Password
+            };
+
             try
             {
-                resp = await _authService.Register(request);
+                resp = await _authService.Register(registerDto);
             }
             catch (Exception ex)
             {
                 return BadRequest(new { Message = $"Registration failed: {ex.Message}" });
             }
-             
+
             return Ok(new { UserId = resp, Message = "Register was successful" });
         }
 
-      
+
     }
 }
+public enum EmailErrorCode
+    {
+        EmailEmpty = -1,
+        EmailInvalidFormat = -2,
+    }

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using SecretSantaAPI;
 using System;
 using System.Net;
 using System.Net.Mail;
@@ -8,43 +10,43 @@ namespace Business
 {
     public class EmailSender: IEmailSender
     {
-        private readonly IConfiguration _configuration;
+        private readonly SmtpOptions _options;
 
-        public EmailSender(IConfiguration configuration)
+        public EmailSender(IOptions<SmtpOptions> options)
         {
-            _configuration = configuration;
+            _options = options.Value;
         }
 
         public async Task SendEmailAsync(string recipientEmail, string subject, string messageBody)
         {
-            var smtpSettings = _configuration.GetSection("SmtpSettings");
+            //var smtpSettings = _configuration.GetSection("SmtpSettings");
 
             // Fetch the port value
-            string? portValue = smtpSettings["Port"];
-            if (portValue == null)
+            //string? portValue = _options.Port;
+            if (_options.Port == default)
             {
                 throw new InvalidOperationException("SMTP Port is not configured.");
             }
 
             // Attempt to parse the port value
-            if (!int.TryParse(portValue, out int port))
-            {
-                throw new InvalidOperationException("SMTP Port is not a valid number.");
-            }
+            //if (!int.TryParse(portValue, out int port))
+            //{
+            //    throw new InvalidOperationException("SMTP Port is not a valid number.");
+            //}
 
             // Set up the SMTP client
-            var smtpClient = new SmtpClient(smtpSettings["Server"] ?? throw new InvalidOperationException("SMTP Server is not configured."))
+            var smtpClient = new SmtpClient(_options.Server ?? throw new InvalidOperationException("SMTP Server is not configured."))
             {
-                Port = port,
+                Port = _options.Port,//port,
                 Credentials = new NetworkCredential(
-                    smtpSettings["SenderEmail"] ?? throw new InvalidOperationException("Sender Email is not configured."),
-                    smtpSettings["SenderPassword"] ?? throw new InvalidOperationException("Sender Password is not configured.")
+                    _options.SenderEmail ?? throw new InvalidOperationException("Sender Email is not configured."),
+                    _options.SenderPassword ?? throw new InvalidOperationException("Sender Password is not configured.")
                 ),
-                EnableSsl = bool.TryParse(smtpSettings["EnableSsl"], out bool enableSsl) && enableSsl
+                EnableSsl = _options.EnableSsl// bool.TryParse(_options.EnableSsl, out bool enableSsl) && enableSsl
             };
 
             // Ensure that the sender email is not null
-            string senderEmail = smtpSettings["SenderEmail"]
+            string senderEmail = _options.SenderEmail
                 ?? throw new InvalidOperationException("Sender Email is not configured.");
 
             // Create the mail message

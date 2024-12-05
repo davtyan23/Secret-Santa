@@ -9,7 +9,7 @@ public class SecretSanta
     {
         throw new NotImplementedException();
     }
-    static void Main(string[] args)
+    static void Main(string[] args)//shift 
     {
         // Main users list
         List<User> users = new List<User>()

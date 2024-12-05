@@ -1,9 +1,12 @@
-﻿using Business.DTOs.Request;
+using Business.DTOs.Request;
+using DataAccess;
 using DataAccess.Models;
 using DataAccess.Repositories;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Business
 {
@@ -49,15 +52,17 @@ namespace Business
         //}
 
         //private readonly UserService _userService;
-       
-        
+        private readonly ILoggerAPI _logger;
         private readonly IRepository _repository;
-        public AuthService (IRepository repository)
+
+        public AuthService(ILoggerAPI logger, IRepository repository)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));//checks its not null
+            _logger = logger;
+            _repository = repository;
         }
 
-        public string HashPass(string password) 
+
+        public string HashPass(string password)
         {
             using (var sha512 = SHA512.Create())
             {
@@ -67,8 +72,8 @@ namespace Business
             }
         }
         // change input values to model 
-        
-        public async Task<string> Register(RegisterRequest request)
+
+        public async Task<string> Register(RegisterRequestDTO request)
         {
             RegistrationPassCheck(request);
 
@@ -80,20 +85,23 @@ namespace Business
                 RegisterTime = DateTime.Now,
                 IsActive = true
             };
-           
-            var newUser = new UserPass
+
+            var newUserPass = new UserPass
             {
                 Email = request.Email,
                 PassHash = HashPass(request.Password),
                 //CreatedAt = DateTime.Now
             };
+            
+            user.UserPass = newUserPass;
+
             var resp = await _repository.AddUserAsync(user);
-            newUser.UserId = resp.Id;
-            await _repository.AddUserPassesAsync(newUser);//pass
-            return newUser.UserId.ToString();
+            newUserPass.UserId = resp.Id;
+            await _repository.AddUserPassesAsync(newUserPass);//pass
+            return newUserPass.UserId.ToString();
         }
 
-        public void RegistrationPassCheck(RegisterRequest request)
+        public void RegistrationPassCheck(RegisterRequestDTO request)
         {
             if (!PasswordPreCheck(request.Password))
             {
@@ -103,14 +111,14 @@ namespace Business
         public bool PasswordPreCheck(string password)
         {
             var regex = new Regex(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{10,}$");
-            //email validation
+            //password validation
             return regex.IsMatch(password);
         }
         //ste tema ka
         public async Task<UserPass> SignInAsync(LoginRequestDTO login)
         {
             var user = await _repository.GetUserByEmailAsync(login.Email);
-            return user;  
+            return user;
         }
 
         /*   public IRepository Get_repository()
@@ -124,13 +132,14 @@ namespace Business
                 string hashEnteredPassword = HashPass(enteredPassword);
                 return hashEnteredPassword == storedHash;
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine(ex.Message);
                 return false;
             }
         }
         public int IsValidEmail(string email)
-          {
+        {
             if (email.Length == 0 || email == null)
             {
                 return -1;
@@ -149,8 +158,29 @@ namespace Business
             }
 
             return 0;
-          }
+        }
 
+        public async Task<bool> VerifyConfirmationCodeAsync(string email, string confirmationCode)
+        {
+            var resetRecord = await _repository.GetPasswordResetCodeByEmailAsync(email);
+            if (resetRecord == null)
+            {
+                _logger.Warn($"No password reset record found for email: {email}");
+                return false;
+            }
+
+            if (resetRecord.ConfirmationCode != confirmationCode)
+            {
+                _logger.Warn($"Invalid confirmation code for email: {email}");
+                return false;
+            }
+
+            if (resetRecord.ExpirationTime < DateTime.Now)
+            {
+                _logger.Warn($"Expired confirmation code for email: {email}");
+                return false;
+            }
+            return true;
+        }
     }
 }
-

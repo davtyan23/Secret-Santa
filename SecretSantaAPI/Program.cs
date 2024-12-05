@@ -9,12 +9,15 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SecretSantaAPI.Controllers;
 using System.Text;
+using SecretSantaAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+builder.Services.AddRazorPages(); // Add Razor Pages service
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Configure Swagger with JWT authentication support
 builder.Services.AddSwaggerGen(options =>
@@ -45,10 +48,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Authorization policy
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ParticipantPolicy", policy =>
-    policy.RequireRole("Participant"));
+        policy.RequireRole("Participant"));
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -60,7 +64,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddSingleton<ILoggerAPI, LoggerAPI>();
+builder.Services.AddScoped<ILoggerAPI, LoggerAPI>(); // Correct registration
+
+builder.Services.AddOptions<SmtpOptions>().BindConfiguration(nameof(SmtpOptions));
 
 // Register EmailSender as a Singleton
 builder.Services.AddSingleton<EmailSender>();
@@ -70,7 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
+    options.TokenValidationParameters = new TokenValidationParameters()
     {
         RequireExpirationTime = true,
         ValidateLifetime = true,
@@ -82,9 +88,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+app.UseCors("AllowAllOrigins");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -94,7 +109,10 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseHttpsRedirection();
 app.UseAuthorization();
-app.MapControllers();
 
-// Run the application
+app.UseStaticFiles();
+
+app.MapControllers();
+app.MapRazorPages(); // Map Razor Pages routes
+
 app.Run();

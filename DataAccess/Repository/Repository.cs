@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 //using System.Data.Entity;
 using DataAccess.Models;
-using Microsoft.EntityFrameworkCore; 
+using DataAccess.UserViewModels;
 
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Repositories
 {
@@ -19,12 +20,12 @@ namespace DataAccess.Repositories
 
         public Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
         {
-            
-            return  _context.Users
+            return _context.Users
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
         }
+
         public List<User> GetAllActiveUsersAsync()
         {
             var a = _context.Users.Where(u => u.IsActive == true);
@@ -51,15 +52,16 @@ namespace DataAccess.Repositories
             var a = user.PassHash.Count();
             user.PassHash = user.PassHash;
             await _context.UserPasses.AddAsync(user);
-            try {
-                
+            try
+            {
+
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            }
+        }
 
         public async Task<User> AddUserAsync(User user)
         {
@@ -79,23 +81,21 @@ namespace DataAccess.Repositories
         {
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-
         }
 
         public async Task DeactivateUserAsync(int id)
         {
-           var user = _context.Users.FindAsync(id);
-           
-           await _context.SaveChangesAsync();
+            var user = _context.Users.FindAsync(id);
+            await _context.SaveChangesAsync();
         }
-
 
         public async Task<User> GetUsersByIdAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
             return user;
         }
-          public async Task<string> GetRoleById(int id)
+        
+        public async Task<string> GetRoleById(int id)
         {
             var role = await _context.Roles.FindAsync(id);
             var roleName = role == null ? null : role.RoleName;
@@ -105,14 +105,14 @@ namespace DataAccess.Repositories
 
         public async Task<List<User>> GetActiveUsersAsync(int limit, int offset)
         {
-        return await _context.Users
-            .Where(u => u.IsActive)
-            .Skip(offset)
-            .Take(limit)
-            .ToListAsync();
+            return await _context.Users
+                .Where(u => u.IsActive)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
         }
 
-         public int IsEmailRegistered(string email)
+        public int IsEmailRegistered(string email)
         {
             bool isEmailRegistered = true;
             var user = _context.UserPasses.Where(u => u.Email == email);
@@ -159,7 +159,7 @@ namespace DataAccess.Repositories
             if (assignedRole != null)
             {
                 _loggerAPI.Warn($"User ID {userId} already has role ID {roleId} assigned.");
-                return assignedRole; 
+                return assignedRole;
             }
 
             var newAssignedRole = new AssignedRole
@@ -172,6 +172,49 @@ namespace DataAccess.Repositories
             await _context.SaveChangesAsync();
             return newAssignedRole;
         }
+
+        public async Task<PassResetConfiramtionCode?> GetPasswordResetCodeByEmailAsync(string email)
+        {
+            return await _context.PasswordResetConfirmationCodes
+                .FirstOrDefaultAsync(x => x.UserEmail == email);
+        }
+
+        public async Task AddConfirmationCodeAsync(PassResetConfiramtionCode code)
+        {
+            await _context.PasswordResetConfirmationCodes.AddAsync(code);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveConfirmationCodeAsync(string email)
+        {
+            var code = await _context.PasswordResetConfirmationCodes
+                              .FirstOrDefaultAsync(c => c.UserEmail == email);
+
+            if (code != null)
+            {
+                _context.PasswordResetConfirmationCodes.Remove(code);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // public async Task PasswordReset
+        public async Task<List<UserViewModel>> GetAllUsersAsync()
+        {
+            return await _context.Users
+                .Select(u => new DataAccess.UserViewModels.UserViewModel
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    PhoneNumber = u.PhoneNumber,
+                    Email = u.UserPass.Email,
+                    IsActive = u.IsActive,
+                    RegisterTime = u.RegisterTime
+                })
+                .ToListAsync();
+
+        }
+
 
     }
 }

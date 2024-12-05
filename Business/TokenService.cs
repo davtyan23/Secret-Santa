@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,13 +15,12 @@ namespace Business.Services
             _configuration = configuration;
         }
 
-        public string CreateToken(string userId, string role)
+        public string CreateToken(string userId, string roleId)
         {
             // Define claims
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
-                new Claim(ClaimTypes.Role, role),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -34,13 +33,11 @@ namespace Business.Services
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(4),
+                expires: DateTime.Now.AddHours(1),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-     
     }
 }

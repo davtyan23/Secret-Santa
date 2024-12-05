@@ -1,13 +1,13 @@
-﻿using Business;
+using Business;
 using DataAccess;
 using DataAccess.Models;
-using DataAccess.DTOs;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SecretSantaAPI.Controllers;
 using Business.Services;
 using Business.DTOs.Request;
+using Azure.Core;
 
 namespace SecretSantaAPI.Controllers
 {
@@ -38,39 +38,72 @@ public class SampleController : ControllerBase
     private readonly ILoggerAPI _loggerAPI;
     private readonly IRepository _repository;
     private readonly IEmailSender _emailSender;
-    public SampleController(IRepository repository, ILoggerAPI logger, IEmailSender emailSender)
+    private readonly IAuthService _authService;
+    public SampleController(IRepository repository, ILoggerAPI logger, IEmailSender emailSender, IAuthService authService)
     {
         _repository = repository;
         _loggerAPI = logger;
         _emailSender = emailSender;
+        _authService = authService;
     }
 
-    [HttpPut("ResetPassword")]
-    public async Task<IActionResult> ResetPassw([FromBody]string Email)
+    [HttpPut("ConfirmationCodeSender")]
+   /* public async Task<IActionResult> ResetPassword([FromBody] string email)
     {
-   
+        //  email = _repository.GetUserByEmailAsync(email);
         int confirmation = Generate6Numbers();
-        var user = await _repository.GetUserByEmailAsync(Email);
-        if (user == null)
+
+        var user = await _repository.GetUserByEmailAsync(email);
+        if (user.Id == null || user.Id == 0)
         {
             return NotFound("user not found");
         }
+        var existingConfirmation = await _repository.GetPasswordResetCodeByEmailAsync(email);
+        if (existingConfirmation != null)
+        {
+            existingConfirmation.ConfirmationCode = confirmation.ToString();
+            existingConfirmation.ExpirationTime = DateTime.Now.AddMinutes(15);
+      //      await _repository.UpdatePasswordResetAsync(existingResetRequest);
+        }
+        else
+        {
+            
+            var passwordReset = new PasswordReset
+            {
+                UserId = user.Id,
+                ConfirmationCode = confirmationCode,
+                ExpirationTime = DateTime.Now.AddMinutes(15), 
+            };
+
+            await _repository.CreatePasswordResetAsync(passwordReset);
+        }
         string subject = "Password Reset Confirmation Code";
         string message = $"Your confirmation code for resetting your password is: {confirmation}";
-
+        await _emailSender.SendEmailAsync(user.Email, subject, message);
         return Ok(new { Message = "Confirmation code sent successfully to your email." });
+
+    }*/
+
+    [HttpPost("VerifyConfirmCode")]
+    public async Task<IActionResult> VerifyResetCode([FromBody] VerifyResetCodeRequestDTO request)
+    {
+        var isValid = await _authService.VerifyConfirmationCodeAsync(request.Email, request.ConfirmationCode);
+        if (!isValid)
+        {
+            return BadRequest(new { message = "Invalid or expired confirmation code." });
+        }
+
+        return Ok(new { message = "Confirmation code is valid." });
     }
 
     private int Generate6Numbers()
     {
         Random random = new Random();
-
         return random.Next(100000, 999999);
     }
+
     [HttpPost("AssignedRoles")]
     [Authorize(Policy = "ParticipantPolicy")]
-
-    // Protect this controller or action
     public async Task<IActionResult> AssignRole([FromBody] RoleAssignDTO request)
     {
         _loggerAPI.Info($"Assigning Role: UserId={request.UserId}, RoleId={request.RoleId}");
@@ -84,17 +117,10 @@ public class SampleController : ControllerBase
                 AssignedRole = assignedRole
             });
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Message = ex.Message });
-        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { Message = "An error occurred.", Details = ex.Message });
+            _loggerAPI.Error($"Error while assigning role: {ex.Message}");
+            return StatusCode(500, new { message = "An error occurred while assigning the role." });
         }
     }
 }
