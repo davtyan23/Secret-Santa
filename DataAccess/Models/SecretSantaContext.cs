@@ -6,6 +6,7 @@ namespace DataAccess.Models;
 
 public partial class SecretSantaContext : DbContext
 {
+    public DbSet<PassResetConfiramtionCode> PasswordResetConfirmationCodes { get; set; }
     public SecretSantaContext()
     {
     }
@@ -24,7 +25,7 @@ public partial class SecretSantaContext : DbContext
     public virtual DbSet<UserPass> UserPasses { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Data Source = INTERN-IS\\MSSQLSERVER01; Initial Catalog = SecretSanta; Integrated Security = True; Trust Server Certificate = True");
+        => optionsBuilder.UseSqlServer("Data Source = MARIALAPTOP\\SQLEXPRESS; Initial Catalog = SecretSanta.bak; Integrated Security = True; Trust Server Certificate = True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,16 +57,16 @@ public partial class SecretSantaContext : DbContext
                 .HasDefaultValue("USER");
         });
 
-        modelBuilder.Entity<User>(entity =>
+        modelBuilder.Entity<User>((Action<Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<User>>)(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC27A8DFC82C");
 
             entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.Firstname).HasMaxLength(30);
+            entity.Property(e => e.FirstName).HasMaxLength(30);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.Lastname).HasMaxLength(30);
-            entity.Property(e => e.Number).HasMaxLength(15);
-        });
+            entity.Property(e => e.LastName).HasMaxLength(30);
+            entity.Property<string>(e => (string)e.PhoneNumber).HasMaxLength(15);
+        }));
 
         modelBuilder.Entity<UserPass>(entity =>
         {
@@ -80,9 +81,9 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.PassHash).HasMaxLength(60);
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
-            entity.HasOne(d => d.User).WithMany(p => p.UserPasses)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__UserPass__UserID__3B75D760");
+            //entity.HasOne(d => d.User).WithOne(p => p.UserPass)
+            //    .HasForeignKey((UserPass e) => e.UserId)
+            //    .HasConstraintName("FK__UserPass__UserID__3B75D760");
         });
 
         OnModelCreatingPartial(modelBuilder);

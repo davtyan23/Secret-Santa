@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace Business.Services
 {
-    public class TokenService
+    public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
 
@@ -15,7 +15,7 @@ namespace Business.Services
             _configuration = configuration;
         }
 
-        public string CreateToken(string userId)
+        public string CreateToken(string userId, string roleId)
         {
             // Define claims
             var claims = new[]

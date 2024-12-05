@@ -1,4 +1,4 @@
-﻿namespace Business
+﻿namespace Business.DTOs
 {
     public class MathRequestDTO
     {

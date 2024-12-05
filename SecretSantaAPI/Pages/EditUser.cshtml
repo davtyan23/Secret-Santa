@@ -1,0 +1,50 @@
+﻿@page
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model SecretSantaAPI.Pages.EditUser
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="/css/Styles.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<h1>Edit User</h1>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.User.Id" />
+
+    <div class="form-group">
+        <label for="FirstName">First Name</label>
+        <input type="text" id="FirstName" name="FirstName" value="@Model.User.FirstName" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="LastName">Last Name</label>
+        <input type="text" id="LastName" name="LastName" value="@Model.User.LastName" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="PhoneNumber">Phone Number</label>
+        <input type="text" id="PhoneNumber" name="PhoneNumber" value="@Model.User.PhoneNumber" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="Email">Email</label>
+        <input type="text" id="Email" name="Email" value="@Model.User.Email" class="form-control" />
+    </div>
+
+    <button type="submit" asp-page-handler="Save" class="btn btn-primary">Save</button>
+    <button type="submit" asp-page-handler="Delete" class="btn btn-danger">Delete</button>
+</form>
+
+<!-- Delete button -->
+@*<form method="post" asp-page-handler="Delete" onsubmit="return confirm('Are you sure you want to delete this user?');">
+    @Html.AntiForgeryToken()
+    <a href="@Url.Page("/EditUser", new { id = item.Id })" class="btn btn-sm btn-warning">Edit</a>
+</form>
+*@

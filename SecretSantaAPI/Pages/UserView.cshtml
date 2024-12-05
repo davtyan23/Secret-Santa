@@ -1,0 +1,71 @@
+﻿@page
+@model SecretSantaAPI.Pages.UserView
+@{
+    ViewData["Title"] = "All Users";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="/css/Styles.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Secret Santa</a>
+    </nav>
+    <div class="container mt-4">
+        <form method="get" class="d-flex mb-3">
+            <input type="text" name="searchQuery" placeholder="Search..." class="form-control me-2" value="@Request.Query["searchQuery"]" />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Active</th>
+                    <th>Registration Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Users)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.FirstName</td>
+                        <td>@item.LastName</td>
+                        <td>@item.PhoneNumber</td>
+                        <td>@item.Email</td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>@item.RegisterTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <form action="/" method="post">
+                        <td>
+                            <a href="@Url.Page("/EditUser", new { id = item.Id })" class="btn btn-sm btn-warning">Edit</a>
+                            @*<form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" class="d-inline" onsubmit="return confirm('Are you sure you want to delete?')">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            *@
+                            @*<a href="@Url.Page("/EditUser", new { id = item.Id })" class="btn btn-sm btn-warning">Edit</a>*@
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

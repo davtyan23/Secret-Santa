@@ -10,6 +10,5 @@ namespace Business
         Task AddUsersAsync(User user);
         Task UpdateUsersAsync(User user);
         Task DeactivateUsersAsync(int isActive);
-        Task<User> FindAsync(int id);
     }
 }
