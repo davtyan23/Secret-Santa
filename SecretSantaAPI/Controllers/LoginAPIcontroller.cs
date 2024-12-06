@@ -119,7 +119,6 @@ namespace SecretSantaAPI.Controllers
             return Ok(new { UserId = resp, Message = "Register was successful" });
         }
 
-
     }
 }
 public enum EmailErrorCode
