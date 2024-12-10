@@ -1,4 +1,4 @@
-﻿using Business.DTOs.Request;
+using Business.DTOs.Request;
 using DataAccess;
 using DataAccess.Models;
 using DataAccess.Repositories;
@@ -52,8 +52,6 @@ namespace Business
         //}
 
         //private readonly UserService _userService;
-
-
         private readonly ILoggerAPI _logger;
         private readonly IRepository _repository;
 
@@ -186,4 +184,3 @@ namespace Business
         }
     }
 }
-

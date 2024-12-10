@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Business.DTOs.Request
 {
-    public class LoginRequest// : IdentityUser
+    public class LoginRequest
     {
 
         public required string Email { get; set; }

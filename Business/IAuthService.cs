@@ -1,4 +1,4 @@
-﻿using Business.DTOs.Request;
+using Business.DTOs.Request;
 using DataAccess.Models;
 
 namespace Business
@@ -11,7 +11,4 @@ namespace Business
         bool VerifyPass(string enteredPassword, string storedHash);
         Task<bool> VerifyConfirmationCodeAsync(string email,string confirmationCode);
     }
-
-   
-
 }
