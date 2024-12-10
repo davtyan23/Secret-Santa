@@ -114,6 +114,18 @@ namespace SecretSantaAPI.Pages
 
             return RedirectToPage("/UserView");
         }
+
+        public async Task<IActionResult> OnPostIsActiveAsync()
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == User.Id);
+            if (user == null)
+                return NotFound();
+
+            user.IsActive = !user.IsActive;
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("/UserView");
+        }
     }
 }
 

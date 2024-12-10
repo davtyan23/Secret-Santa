@@ -57,15 +57,11 @@
                             }
                         </td>
                         <td>@item.RegisterTime.ToString("yyyy-MM-dd HH:mm")</td>
-                        @*<form action="/" method="post">*@
+                      
                         <td>
                             <a href="@Url.Page("/EditUser", new { id = item.Id })" class="btn btn-sm btn-warning">Edit</a>
-                            @*<form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" class="d-inline" onsubmit="return confirm('Are you sure you want to delete?')">
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                            </form>
-                            *@
-                            @*<a href="@Url.Page("/EditUser", new { id = item.Id })" class="btn btn-sm btn-warning">Edit</a>*@
                         </td>
+                       
                     </tr>
                 }
             </tbody>
