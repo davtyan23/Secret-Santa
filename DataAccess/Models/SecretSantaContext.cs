@@ -37,13 +37,13 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
-            entity.HasOne(d => d.Role).WithMany(p => p.AssignedRoles)
+/*            entity.HasOne(d => d.Role).WithMany(p => p.AssignedRoles)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("FK__AssignedR__RoleI__4222D4EF");
 
             entity.HasOne(d => d.User).WithMany(p => p.AssignedRoles)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__AssignedR__UserI__412EB0B6");
+                .HasConstraintName("FK__AssignedR__UserI__412EB0B6");*/
         });
 
         modelBuilder.Entity<Role>(entity =>

@@ -28,7 +28,7 @@ public class UserService : IUserService
         return _repository.GetUsersByIdAsync(id);
     }
 
-    public Task AddUsersAsync(User user)
+    public Task<User> AddUsersAsync(User user)
     {
         return _repository.AddUserAsync(user);
     }
