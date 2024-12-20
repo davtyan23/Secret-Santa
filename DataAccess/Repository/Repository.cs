@@ -95,7 +95,7 @@ namespace DataAccess.Repositories
             return user;
         }
         
-        public async Task<string> GetRoleById(int id)
+        public async Task<string> GetRoleById(RoleIdEnum id)
         {
             var role = await _context.Roles.FindAsync(id);
             var roleName = role == null ? null : role.RoleName;
@@ -121,9 +121,19 @@ namespace DataAccess.Repositories
         }
 
 
-        public async Task<UserPass> GetUserByEmailAsync(string email)
+        public async Task<User> GetUserByEmailAsync(string email)
         {
-            var result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
+            User result = _context.Users.FirstOrDefault(u => u.UserPass.Email == email);
+            if (result == null)
+            {
+                return new User { };
+            }
+            else return result;
+        }
+
+        public async Task<UserPass> GetUserPassByEmailAsync(string email)
+        {
+            UserPass result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
             if (result == null)
             {
                 return new UserPass { };
@@ -137,9 +147,9 @@ namespace DataAccess.Repositories
                 .FirstOrDefaultAsync(ar => ar.UserId == userId) ?? new AssignedRole();
         }
 
-        public async Task<AssignedRole> RoleAssigning(int userId, int roleId)
+        public async Task<AssignedRole> RoleAssigning(int userId, RoleIdEnum roleId)
         {
-            var role = await _context.Roles.FindAsync(roleId);
+            var role = await _context.Roles.FindAsync(roleId); // maybe int convert
             if (role == null)
             {
                 _loggerAPI.Error($"Role with ID {roleId} not found.");
@@ -165,7 +175,7 @@ namespace DataAccess.Repositories
             var newAssignedRole = new AssignedRole
             {
                 UserId = userId,
-                RoleId = roleId
+                RoleId = (RoleIdEnum)roleId
             };
 
             await _context.AssignedRoles.AddAsync(newAssignedRole);
@@ -215,6 +225,10 @@ namespace DataAccess.Repositories
 
         }
 
-     
+        public async Task<bool> IsEmailTakenAsync(string email)
+        {
+            var user = await _context.UserPasses.FirstOrDefaultAsync(u => u.Email == email);
+            return user != null;
+        }
     }
 }

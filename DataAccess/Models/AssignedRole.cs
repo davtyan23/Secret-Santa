@@ -9,6 +9,12 @@ public partial class AssignedRole
 
     public int UserId { get; set; }
 
-    public int RoleId { get; set; }
+    public RoleIdEnum RoleId { get; set; }
 
+}
+
+public enum RoleIdEnum
+{
+    Admin = 1,
+    Participant = 2
 }

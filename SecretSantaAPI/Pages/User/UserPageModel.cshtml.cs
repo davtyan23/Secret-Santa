@@ -36,12 +36,37 @@ namespace SecretSantaAPI.Pages.User
         public UserPageModel(SecretSantaContext context) => _context = context;
 
         [BindProperty]
-        public UserViewModel UserViewModel { get; set; }
+        public UserViewModel UserViewModel { get; set; } = new UserViewModel();
+
+        [BindProperty(SupportsGet = true)]
+        public string UserId { get; set; }
+
+        public string Token { get; set; }
+        public string Message { get; set; }
 
         public async Task OnGet()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                //return RedirectToPage("/Account/Login");  // Redirect if not authenticated
+                Console.WriteLine("No auth?");
+            }
+
+            string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"{claim.Type}: {claim.Value}");
+            }
+
+            if (!int.TryParse(idClaim, out int identity))
+            {
+                RedirectToPage("/Account/Login");
+                return;
+            }
+
             int id = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
+
             var userInfo = await _context.Users.
                    Where(u => u.Id == id).
                    Include(u => u.UserPass).
@@ -53,7 +78,7 @@ namespace SecretSantaAPI.Pages.User
                        user.UserPass.Email,
                    })
                    .FirstOrDefaultAsync();
-        
+
             if (userInfo != null)
             {
                 UserViewModel = new UserViewModel
@@ -68,6 +93,7 @@ namespace SecretSantaAPI.Pages.User
                 };
             }
 
+            Console.WriteLine($"User info populated: {UserViewModel.FirstName}, {UserViewModel.LastName}, {UserViewModel.PhoneNumber}");
 
             //public async Task<IActionResult> OnPostAsync(int id)
             //{
