@@ -9,7 +9,7 @@ namespace Business.DTOs.Request
 {
     public class RoleAssignDTO
     {
-        public int UserId { get; set; }
-        public RoleIdEnum RoleId { get; set; }
+        public int UserID { get; set; }
+        public RoleIdEnum RoleID { get; set; }
     }
 }

@@ -106,10 +106,10 @@ public class SampleController : ControllerBase
     [Authorize(Policy = "ParticipantPolicy")]
     public async Task<IActionResult> AssignRole([FromBody] RoleAssignDTO request)
     {
-        _loggerAPI.Info($"Assigning Role: UserId={request.UserId}, RoleId={request.RoleId}");
+        _loggerAPI.Info($"Assigning Role: UserId={request.UserID}, RoleId={request.RoleID}");
         try
         {
-            var assignedRole = await _repository.RoleAssigning(request.UserId, request.RoleId);
+            var assignedRole = await _repository.RoleAssigning(request.UserID, request.RoleID);
 
             return Ok(new
             {

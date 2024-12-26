@@ -8,8 +8,10 @@ namespace DataAccess.Models
 {
     public class UserRole
     {
-        public int UserRoleId { get; set; }
-        public int RoleId { get; set; }
-        public Role Role { get; set; } = null!;
+        public int UserRolesID { get; set; }
+        public int RoleID { get; set; }
+        public int UserID { get; set; } 
+        public virtual User? User { get; set; } 
+        public virtual Role? Role { get; set; }
     }
 }

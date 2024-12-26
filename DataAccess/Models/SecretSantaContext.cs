@@ -81,21 +81,67 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.UserId).HasColumnName("UserID");
         });
 
-        // SecretSantaGroup
         modelBuilder.Entity<Group>(entity =>
         {
             entity.HasKey(e => e.GroupID);
             entity.Property(e => e.GroupName).HasMaxLength(55).IsRequired();
-            entity.Property(e => e.Location).IsRequired();
-            entity.Property(e => e.Budget).IsRequired();
-                 entity.HasCheckConstraint("CK_Budget", "Budget >= 1000 AND Budget <= 1000000");
+            entity.Property(e => e.GroupLocation).IsRequired();
+            entity.Property(e => e.MaxBudget).IsRequired();
+            entity.Property(e => e.MinBudget).IsRequired();
         });
 
-      
-     
 
-        OnModelCreatingPartial(modelBuilder);
+        modelBuilder.Entity<UserGroup>(entity =>
+        {
+            entity.HasKey(e => e.UserGroupID);
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserID)
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .HasConstraintName("FK_UserGroups_User");
+
+            entity.HasOne(e => e.Groups)
+                  .WithMany()
+                  .HasForeignKey(e => e.GroupID)
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .HasConstraintName("FK_UserGroups_Group");
+        });
+
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.HasKey(e => e.UserRolesID); 
+
+            entity.HasOne(e => e.Role)
+                  .WithMany() 
+                  .HasForeignKey(e => e.RoleID)
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .HasConstraintName("FK_UserRoles_Role");
+
+            entity.HasOne(e => e.User)
+                  .WithMany()  
+                  .HasForeignKey(e => e.UserID)
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .HasConstraintName("FK_UserRoles_User");
+        });
+
+        modelBuilder.Entity<GroupInfo>(entity =>
+        {
+            entity.HasKey(e => e.GroupInfoID); 
+
+            entity.HasOne(e => e.UserGroups)
+                  .WithMany() 
+                  .HasForeignKey(e => e.UserGroupID)
+                  .OnDelete(DeleteBehavior.Restrict
+                  ) 
+                  .HasConstraintName("FK_GroupInfo_UserGroup");
+
+            entity.HasOne(e => e.Reciever)
+                  .WithMany() 
+                  .HasForeignKey(e => e.RecieverID)
+                  .OnDelete(DeleteBehavior.Restrict)                  
+                  .HasConstraintName("FK_GroupInfo_Receiver");
+        });
+
+        OnModelCreating(modelBuilder);
     }
-
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

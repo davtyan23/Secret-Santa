@@ -8,8 +8,8 @@ namespace DataAccess.Models
 {
     public class GroupInfo
     {
-        public int GroupInfoId { get; set; }
-        public int UserGroupId { get; set; }
+        public int GroupInfoID { get; set; }
+        public int UserGroupID { get; set; }
         public int RecieverID { get; set; }
         public string Whishlist { get; set; }
         public UserGroup UserGroups { get; set; } = null!;
