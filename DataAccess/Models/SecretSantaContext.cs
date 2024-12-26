@@ -23,12 +23,19 @@ public partial class SecretSantaContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserPass> UserPasses { get; set; }
+    public virtual DbSet<Group> Groups { get; set; }
+    public virtual DbSet<UserGroup> UsersGroups { get; set; }
+    public virtual DbSet<UserRole> UserRoles { get; set; }
+    public virtual DbSet<GroupInfo> GroupsInfo { get; set; }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Data Source = MARIALAPTOP\\SQLEXPRESS; Initial Catalog = SecretSanta.bak; Integrated Security = True; Trust Server Certificate = True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<AssignedRole>(entity =>
         {
             entity.HasKey(e => e.UserRolesId).HasName("PK__Assigned__43D8C0CD0CFF31EB");
@@ -36,14 +43,6 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.UserRolesId).HasColumnName("UserRolesID");
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.UserId).HasColumnName("UserID");
-
-/*            entity.HasOne(d => d.Role).WithMany(p => p.AssignedRoles)
-                .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__AssignedR__RoleI__4222D4EF");
-
-            entity.HasOne(d => d.User).WithMany(p => p.AssignedRoles)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__AssignedR__UserI__412EB0B6");*/
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -57,7 +56,7 @@ public partial class SecretSantaContext : DbContext
                 .HasDefaultValue("USER");
         });
 
-        modelBuilder.Entity<User>((Action<Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<User>>)(entity =>
+        modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC27A8DFC82C");
 
@@ -65,8 +64,8 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.FirstName).HasMaxLength(30);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.LastName).HasMaxLength(30);
-            entity.Property<string>(e => (string)e.PhoneNumber).HasMaxLength(15);
-        }));
+            entity.Property(e => e.PhoneNumber).HasMaxLength(15);
+        });
 
         modelBuilder.Entity<UserPass>(entity =>
         {
@@ -80,11 +79,20 @@ public partial class SecretSantaContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.PassHash).HasMaxLength(60);
             entity.Property(e => e.UserId).HasColumnName("UserID");
-
-            //entity.HasOne(d => d.User).WithOne(p => p.UserPass)
-            //    .HasForeignKey((UserPass e) => e.UserId)
-            //    .HasConstraintName("FK__UserPass__UserID__3B75D760");
         });
+
+        // SecretSantaGroup
+        modelBuilder.Entity<Group>(entity =>
+        {
+            entity.HasKey(e => e.GroupID);
+            entity.Property(e => e.GroupName).HasMaxLength(55).IsRequired();
+            entity.Property(e => e.Location).IsRequired();
+            entity.Property(e => e.Budget).IsRequired();
+                 entity.HasCheckConstraint("CK_Budget", "Budget >= 1000 AND Budget <= 1000000");
+        });
+
+      
+     
 
         OnModelCreatingPartial(modelBuilder);
     }

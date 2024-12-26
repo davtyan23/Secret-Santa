@@ -1,4 +1,4 @@
-/*using Business;
+using Business;
 using Business.DTOs;
 using DataAccess;
 using DataAccess.Models;
@@ -50,6 +50,7 @@ namespace SecretSantaAPI.Controllers
         {
             var users = await _userService.GetPaginatedUsersAsync(limit, offset);
             return Ok(users);
+           
         }
 
         // GET: api/users/active
@@ -142,4 +143,3 @@ namespace SecretSantaAPI.Controllers
        
     }
 }
-*/
