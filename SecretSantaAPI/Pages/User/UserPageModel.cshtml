@@ -18,21 +18,38 @@
         <a class="navbar-brand" href="#">Secret Santa</a>
     </nav>
     <div class="container mt-4">
-        <!-- <h2>Welcome to your account page Model.RegisterModel.Token.FirstName</h2> -->
         <p>Welcome to your account <b>@Model.UserViewModel.FirstName @Model.UserViewModel.LastName</b></p>
         <table>
             <thead>
                 <tr>
-                    <th>SecretSanta groups</th>
-                    <th>Your Secret Santa groups</th>
+                    <th>Secret Santa Groups</th>
+                    <th>Your Secret Santa Groups</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-
-                    <form action="/" method="post"></form>
+                    <td>
+                        <!-- Loop through all available Secret Santa groups -->
+                     @*    @foreach (var group in Model.AllGroups)
+                        {
+                            <p>@group.GroupName</p>
+                        }
+                    </td>
+                    <td>
+                        <!-- Loop through user's groups -->
+                        @foreach (var group in Model.UserGroups)
+                        {
+                            <p>@group.GroupName</p>
+                        }
+ *@
+                        <!-- Button to add a new group -->
+                        <form asp-action="AddGroup" method="post">
+                            <button type="submit" class="btn btn-primary">Add New Group</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
+
         </table>
     </div>
 </body>

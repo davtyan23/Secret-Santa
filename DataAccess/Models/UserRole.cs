@@ -9,7 +9,7 @@ namespace DataAccess.Models
     public class UserRole
     {
         public int UserRolesID { get; set; }
-        public int RoleID { get; set; }
+        public RoleIdEnum RoleID { get; set; }
         public int UserID { get; set; } 
         public virtual User? User { get; set; } 
         public virtual Role? Role { get; set; }

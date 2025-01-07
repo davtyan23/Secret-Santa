@@ -48,8 +48,9 @@ namespace SecretSantaAPI.Pages.User
         {
             if (!User.Identity.IsAuthenticated)
             {
-                //return RedirectToPage("/Account/Login");  // Redirect if not authenticated
+                 RedirectToPage("/Account/Login");  // Redirect if not authenticated
                 Console.WriteLine("No auth?");
+                return;
             }
 
             string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

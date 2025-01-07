@@ -9,6 +9,6 @@ public partial class Role
 
     public string RoleName { get; set; } = null!;
 
-    public virtual ICollection<AssignedRole> AssignedRoles { get; set; } = new List<AssignedRole>();
-    public ICollection<UserRoleGroup> UserRolesGroups { get; set; }
+   // public virtual ICollection<AssignedRole> AssignedRoles { get; set; } = new List<AssignedRole>();
+   // public ICollection<Groups> UserRolesGroups { get; set; }
 }
