@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using DataAccess.Repositories;
 
 namespace SecretSantaAPI.Pages.User
 {
@@ -32,8 +33,16 @@ namespace SecretSantaAPI.Pages.User
     public class UserPageModel : PageModel
     {
         private readonly SecretSantaContext _context;
+        private readonly IRepository _repository;
 
-        public UserPageModel(SecretSantaContext context) => _context = context;
+        public UserPageModel(SecretSantaContext context, IRepository repository)
+        {
+            _context = context;
+            _repository = repository;
+        }
+
+        public List<Group> ParticipatingGroups { get; set; } = new();
+        public List<Group> CreatedGroups { get; set; } = new();
 
         [BindProperty]
         public UserViewModel UserViewModel { get; set; } = new UserViewModel();
@@ -46,13 +55,15 @@ namespace SecretSantaAPI.Pages.User
 
         public async Task OnGet()
         {
+            // Redirect if the user is not authenticated
             if (!User.Identity.IsAuthenticated)
             {
-                 RedirectToPage("/Account/Login");  // Redirect if not authenticated
+                RedirectToPage("/Account/Login");
                 Console.WriteLine("No auth?");
                 return;
             }
 
+            // Extract user ID from claims
             string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             foreach (var claim in User.Claims)
@@ -60,25 +71,24 @@ namespace SecretSantaAPI.Pages.User
                 Console.WriteLine($"{claim.Type}: {claim.Value}");
             }
 
-            if (!int.TryParse(idClaim, out int identity))
+            if (!int.TryParse(idClaim, out int userId))
             {
                 RedirectToPage("/Account/Login");
                 return;
             }
 
-            int id = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-            var userInfo = await _context.Users.
-                   Where(u => u.Id == id).
-                   Include(u => u.UserPass).
-                   Select(user => new
-                   {
-                       user.FirstName,
-                       user.LastName,
-                       user.PhoneNumber,
-                       user.UserPass.Email,
-                   })
-                   .FirstOrDefaultAsync();
+            // Retrieve user information
+            var userInfo = await _context.Users
+                .Where(u => u.Id == userId)
+                .Include(u => u.UserPass)
+                .Select(user => new
+                {
+                    user.FirstName,
+                    user.LastName,
+                    user.PhoneNumber,
+                    user.UserPass.Email,
+                })
+                .FirstOrDefaultAsync();
 
             if (userInfo != null)
             {
@@ -96,10 +106,56 @@ namespace SecretSantaAPI.Pages.User
 
             Console.WriteLine($"User info populated: {UserViewModel.FirstName}, {UserViewModel.LastName}, {UserViewModel.PhoneNumber}");
 
-            //public async Task<IActionResult> OnPostAsync(int id)
-            //{
-            //   return 
-            //}
+            // Retrieve groups where the user participates
+            ParticipatingGroups = await _context.UsersGroups
+                .Where(ug => ug.UserID == userId)
+                .Select(ug => ug.Groups)
+                .ToListAsync();
+
+            Console.WriteLine($"Participating groups count: {ParticipatingGroups.Count}");
+
+            // Optionally, retrieve groups created by the user (if needed)
+            CreatedGroups = await _context.Groups
+                .Where(g => g.OwnerUserID == userId)
+                .ToListAsync();
+
+            Console.WriteLine($"Created groups count: {CreatedGroups.Count}");
+        }
+
+        public async Task<IActionResult> OnPostAddGroupAsync(string groupName, string? groupDescription, string? groupLocation,int minBudget,int maxBudget)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToPage("Pages/Login");
+            }
+            // Get the logged-in user's ID
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return RedirectToPage("/Account/Login");
+            }
+
+            if (string.IsNullOrWhiteSpace(groupName) || minBudget < 0 || maxBudget < minBudget)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid group details provided.");
+                return Page();
+            }
+            // Create a new group entity
+            var newGroup = new Group
+            {
+                GroupName = groupName,
+                GroupDescription = groupDescription,
+                GroupLocation = groupLocation,
+                MinBudget = minBudget,
+                MaxBudget = maxBudget,
+                OwnerUserID = userId
+            };
+
+            _context.Groups.Add(newGroup);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage();
         }
     }
+    
 }

@@ -230,5 +230,14 @@ namespace DataAccess.Repositories
             var user = await _context.UserPasses.FirstOrDefaultAsync(u => u.Email == email);
             return user != null;
         }
+
+        public async Task<List<Group>> GetGroupsAsync(int userId)
+        {
+            return await _context.UsersGroups
+                .Where(ug => ug.UserID == userId)
+                .Select(ug => ug.Groups)
+                .ToListAsync();
+        }
+
     }
 }

@@ -15,5 +15,7 @@ namespace DataAccess.Models
         public string? GroupLocation { get; set; }
         public int MinBudget { get; set; }
         public int MaxBudget { get; set; }
+
+        public ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
     }
 }

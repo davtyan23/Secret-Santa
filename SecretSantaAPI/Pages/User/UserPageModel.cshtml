@@ -2,7 +2,7 @@
 @model SecretSantaAPI.Pages.User.UserPageModel
 @{
     ViewData["Title"] = "User Page";
-    Layout = "~/Pages/Shared/_AdminLayout.cshtml"; 
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -18,39 +18,85 @@
         <a class="navbar-brand" href="#">Secret Santa</a>
     </nav>
     <div class="container mt-4">
-        <p>Welcome to your account <b>@Model.UserViewModel.FirstName @Model.UserViewModel.LastName</b></p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Secret Santa Groups</th>
-                    <th>Your Secret Santa Groups</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <!-- Loop through all available Secret Santa groups -->
-                     @*    @foreach (var group in Model.AllGroups)
-                        {
-                            <p>@group.GroupName</p>
-                        }
-                    </td>
-                    <td>
-                        <!-- Loop through user's groups -->
-                        @foreach (var group in Model.UserGroups)
-                        {
-                            <p>@group.GroupName</p>
-                        }
- *@
-                        <!-- Button to add a new group -->
-                        <form asp-action="AddGroup" method="post">
-                            <button type="submit" class="btn btn-primary">Add New Group</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
+        <h2>Welcome to your account, <b>@Model.UserViewModel.FirstName @Model.UserViewModel.LastName</b></h2>
 
-        </table>
+        <div class="row mt-4">
+            <!-- Secret Santa Groups Created by User -->
+            <div class="col-md-6">
+                <h3>Secret Santa Groups</h3>
+                @if (Model.CreatedGroups.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var group in Model.CreatedGroups)
+                        {
+                            <li class="list-group-item">
+                                <h5>@group.GroupName</h5>
+                                <p>@group.GroupDescription</p>
+                                <p><strong>Location:</strong> @group.GroupLocation</p>
+                                <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>No groups created yet.</p>
+                }
+            </div>
+
+            <!-- Secret Santa Groups User Participates In -->
+            <div class="col-md-6">
+                <h3>Your Secret Santa Groups</h3>
+                @if (Model.ParticipatingGroups.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var group in Model.ParticipatingGroups)
+                        {
+                            <li class="list-group-item">
+                                <h5>@group.GroupName</h5>
+                                <p>@group.GroupDescription</p>
+                                <p><strong>Location:</strong> @group.GroupLocation</p>
+                                <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>You are not participating in any groups yet.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Button to add a new group -->
+        <div class="row mt-4">
+            <div class="col-md-6 offset-md-3">
+                <h3>Create a New Group</h3>
+                <form method="post" asp-page-handler="AddGroup">
+                    <div class="mb-3">
+                        <label for="GroupName" class="form-label">Group Name</label>
+                        <input type="text" class="form-control" id="GroupName" name="groupName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="GroupDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="GroupDescription" name="groupDescription"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="GroupLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="GroupLocation" name="groupLocation" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="MinBudget" class="form-label">Minimum Budget</label>
+                        <input type="number" class="form-control" id="MinBudget" name="minBudget" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="MaxBudget" class="form-label">Maximum Budget</label>
+                        <input type="number" class="form-control" id="MaxBudget" name="maxBudget" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Group</button>
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>
