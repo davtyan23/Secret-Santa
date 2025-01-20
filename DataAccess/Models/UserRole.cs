@@ -11,6 +11,7 @@ namespace DataAccess.Models
         public int UserRolesID { get; set; }
         public RoleIdEnum RoleID { get; set; }
         public int UserID { get; set; } 
+        public int GroupID {  get; set; }
         public virtual User? User { get; set; } 
         public virtual Role? Role { get; set; }
     }

@@ -16,11 +16,11 @@ public class AccountController : Controller
         _userService = userService;
     }
 
-    [HttpGet]
-    public IActionResult Login()
-    {
-        return View();
-    }
+    //[HttpGet]
+    //public IActionResult Login()
+    //{
+    //    return View();
+    //}
 
     [HttpPost]
     public async Task<IActionResult> Login(string email, string password)
@@ -60,7 +60,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Logout()    {
+    public async Task<IActionResult> Logout(){
         // Sign out the user
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login", "Account");

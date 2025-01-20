@@ -1,9 +1,15 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
+
+using System.Text;
+
 //using System.Data.Entity;
 using DataAccess.Models;
 using DataAccess.UserViewModels;
-
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DataAccess.Repositories
 {
@@ -11,11 +17,13 @@ namespace DataAccess.Repositories
     {
         private readonly SecretSantaContext _context;
         private readonly ILoggerAPI _loggerAPI;
+        private readonly IConfiguration _configuration;
 
-        public Repository(SecretSantaContext context, ILoggerAPI loggerAPI)
+        public Repository(SecretSantaContext context, ILoggerAPI loggerAPI, IConfiguration configuration)
         {
             _context = context;
             _loggerAPI = loggerAPI;
+            _configuration = configuration;
         }
 
         public Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
@@ -94,7 +102,7 @@ namespace DataAccess.Repositories
             var user = await _context.Users.FindAsync(id);
             return user;
         }
-        
+
         public async Task<string> GetRoleById(RoleIdEnum id)
         {
             var role = await _context.Roles.FindAsync(id);
@@ -239,5 +247,109 @@ namespace DataAccess.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Group> GetGroupByIdAsync(int groupId)
+        {
+            return await _context.Groups
+                .FirstOrDefaultAsync(g => g.GroupID == groupId);
+        }
+
+        public async Task<bool> AddUserToGroupAsync(int userId, int groupId)
+        {
+            // Check if the user exists
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return false; // User not found
+            }
+
+            // Check if the group exists
+            var group = await _context.Groups.FindAsync(groupId);
+            if (group == null)
+            {
+                return false; // Group not found
+            }
+
+            // Check if the user is already in the group
+            var existingUserGroup = await _context.UsersGroups
+                .FirstOrDefaultAsync(ug => ug.UserID == userId && ug.GroupID == groupId);
+            if (existingUserGroup != null)
+            {
+                return false; // User is already in the group
+            }
+
+            // Add the user to the group
+            var userGroup = new UserGroup
+            {
+                UserID = userId,
+                GroupID = groupId
+            };
+
+            await _context.UsersGroups.AddAsync(userGroup);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Group?> GetGroupByTokenAsync(string invitationToken)
+        {
+            if (string.IsNullOrWhiteSpace(invitationToken))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]);
+
+            try
+            {
+                tokenHandler.ValidateToken(invitationToken, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var groupId = jwtToken.Claims.FirstOrDefault(c => c.Type == "groupId")?.Value;
+
+                if (int.TryParse(groupId, out int parsedGroupId))
+                {
+                    return await _context.Groups.FirstOrDefaultAsync(g => g.GroupID == parsedGroupId);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+        public string GenerateInvitationToken()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        public async Task<Group> CreateGroupAsync(Group group)
+        {
+            group.InvitationToken = GenerateInvitationToken(); // Assign a new token
+            _context.Groups.Add(group);
+            await _context.SaveChangesAsync();
+            return group;
+        }
+
+       /* public async Task<string> GetGroupLinkAsync(Group group)
+        {
+            if (string.IsNullOrEmpty(group.InvitationToken))
+            {
+                throw new InvalidOperationException("Group does not have a valid invitation token.");
+            }
+
+            
+
+            // Replace with your actual API domain
+            return $"https://localhost:7195/join-group?token={group.InvitationToken}";
+        }*/
     }
 }

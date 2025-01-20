@@ -9,6 +9,11 @@ using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using DataAccess.Repositories;
+using DataAccess;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
 namespace SecretSantaAPI.Pages.User
 {
@@ -34,11 +39,14 @@ namespace SecretSantaAPI.Pages.User
     {
         private readonly SecretSantaContext _context;
         private readonly IRepository _repository;
-
-        public UserPageModel(SecretSantaContext context, IRepository repository)
+        private readonly ILoggerAPI _loggerAPI;
+        private readonly IConfiguration _configuration;
+        public UserPageModel(SecretSantaContext context, IRepository repository, ILoggerAPI loggerAPI, IConfiguration configuration)
         {
             _context = context;
             _repository = repository;
+            _loggerAPI = loggerAPI;
+            _configuration = configuration;
         }
 
         public List<Group> ParticipatingGroups { get; set; } = new();
@@ -52,7 +60,6 @@ namespace SecretSantaAPI.Pages.User
 
         public string Token { get; set; }
         public string Message { get; set; }
-
         public async Task OnGet()
         {
             // Redirect if the user is not authenticated
@@ -121,14 +128,60 @@ namespace SecretSantaAPI.Pages.User
 
             Console.WriteLine($"Created groups count: {CreatedGroups.Count}");
         }
+        //public async Task<IActionResult> OnPostAddOwnerToUsersAsync(int groupId, int ownerId)
+        //{
+        //    try
+        //    {
+        //        var group = await _context.Groups.FindAsync(groupId);
+        //        if (group == null)
+        //        {
+        //            _loggerAPI.Error($"Group with ID {groupId} not found."); // Log error
+        //            ModelState.AddModelError(string.Empty, "Group not found."); // Add error for UI
+        //            return Page();
+        //        }
 
-        public async Task<IActionResult> OnPostAddGroupAsync(string groupName, string? groupDescription, string? groupLocation,int minBudget,int maxBudget)
+        //        // Logic to add the owner to participants...
+        //        var owner = await _context.Users.FindAsync(ownerId);
+        //        if (owner == null)
+        //        {
+        //            _loggerAPI.Error($"User with ID {ownerId} not found.");
+        //            ModelState.AddModelError(string.Empty, "Owner not found.");
+        //            return Page();
+        //        }
+
+        //        if (!_context.GroupParticipants.Any(gp => gp.GroupId == groupId && gp.UserId == ownerId))
+        //        {
+        //            _context.GroupParticipants.Add(new GroupParticipant
+        //            {
+        //                GroupId = groupId,
+        //                UserId = ownerId
+        //            });
+        //            await _context.SaveChangesAsync();
+        //            _loggerAPI.Info($"Owner with ID {ownerId} added to group {group.GroupName} successfully.");
+        //        }
+        //        else
+        //        {
+        //            ModelState.AddModelError(string.Empty, "Owner is already a participant.");
+        //        }
+
+        //        return RedirectToPage(); // Refresh the current page
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _loggerAPI.Error($"An error occurred: {ex.Message}"); // Log exception
+        //        ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again."); // Inform user
+        //        return Page();
+        //    }
+        //}
+
+        public async Task<IActionResult> OnPostAddGroupAsync(string groupName, string? groupDescription, string? groupLocation, int minBudget, int maxBudget)
         {
             if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToPage("Pages/Login");
             }
-            // Get the logged-in user's ID
+
+            // Get the logged-in user's ID from the JWT token claims
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
             {
@@ -140,6 +193,25 @@ namespace SecretSantaAPI.Pages.User
                 ModelState.AddModelError(string.Empty, "Invalid group details provided.");
                 return Page();
             }
+
+            // Generate a JWT token for the invitation link
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = (Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])); 
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+            new Claim("groupId", Guid.NewGuid().ToString()), // group ID
+            new Claim("ownerId", userId.ToString()), // Owner ID
+        }),
+                Expires = DateTime.UtcNow.AddDays(7), 
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var invitationToken = tokenHandler.WriteToken(token);
+
             // Create a new group entity
             var newGroup = new Group
             {
@@ -148,7 +220,8 @@ namespace SecretSantaAPI.Pages.User
                 GroupLocation = groupLocation,
                 MinBudget = minBudget,
                 MaxBudget = maxBudget,
-                OwnerUserID = userId
+                OwnerUserID = userId,
+                InvitationToken = invitationToken
             };
 
             _context.Groups.Add(newGroup);
@@ -156,6 +229,7 @@ namespace SecretSantaAPI.Pages.User
 
             return RedirectToPage();
         }
+
     }
-    
+
 }

@@ -34,6 +34,15 @@
                                 <p>@group.GroupDescription</p>
                                 <p><strong>Location:</strong> @group.GroupLocation</p>
                                 <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
+
+                                <!-- Button to add owner to participants -->
+                                <form method="post" asp-page-handler="AddOwnerToUsers" class="mt-2">
+                                    <input type="hidden" name="groupId" value="@group.GroupID" />
+                                    <input type="hidden" name="ownerId" value="@Model.UserViewModel.UserPass.UserId" />
+                                    <button type="submit" class="btn btn-secondary btn-sm">
+                                        Add Owner to Participants
+                                    </button>
+                                </form>
                             </li>
                         }
                     </ul>

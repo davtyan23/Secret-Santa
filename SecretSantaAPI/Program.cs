@@ -49,12 +49,22 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Add Authorization policy
+//Add Authorization policy
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ParticipantPolicy", policy =>
         policy.RequireRole("Admin")); // Example role-based policy
 });
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("ParticipantPolicy", policy =>
+//        policy.RequireAssertion(context =>
+//            context.User.HasClaim("role", "Participant") ||
+//            context.User.HasClaim("role", "Owner") ||
+//            context.User.HasClaim("role", "Admin"))); // Allow owners
+//});
+
 
 // Configure Cookie Authentication for browser sessions
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
