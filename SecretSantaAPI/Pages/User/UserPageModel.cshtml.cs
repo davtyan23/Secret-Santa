@@ -49,8 +49,9 @@ namespace SecretSantaAPI.Pages.User
             _configuration = configuration;
         }
 
-        public List<Group> ParticipatingGroups { get; set; } = new();
-        public List<Group> CreatedGroups { get; set; } = new();
+        public bool IsGroupOwner { get; set; }
+        public List<Group> ParticipatingGroups { get; set; } = new List<Group>();
+        public List<Group> CreatedGroups { get; set; } = new List<Group>();
 
         [BindProperty]
         public UserViewModel UserViewModel { get; set; } = new UserViewModel();
@@ -112,6 +113,7 @@ namespace SecretSantaAPI.Pages.User
             }
 
             Console.WriteLine($"User info populated: {UserViewModel.FirstName}, {UserViewModel.LastName}, {UserViewModel.PhoneNumber}");
+            Console.WriteLine($"TOKENNNNNN: {UserViewModel.LastName}, {UserViewModel.PhoneNumber}");
 
             // Retrieve groups where the user participates
             ParticipatingGroups = await _context.UsersGroups
@@ -121,13 +123,18 @@ namespace SecretSantaAPI.Pages.User
 
             Console.WriteLine($"Participating groups count: {ParticipatingGroups.Count}");
 
-            // Optionally, retrieve groups created by the user (if needed)
+            // Retrieve groups created by the user (if needed)
             CreatedGroups = await _context.Groups
                 .Where(g => g.OwnerUserID == userId)
                 .ToListAsync();
 
             Console.WriteLine($"Created groups count: {CreatedGroups.Count}");
+
+            // Determine if the user is the owner of any group
+            IsGroupOwner = CreatedGroups.Count > 0;  // Use Count > 0 instead of Any()
         }
+
+
         //public async Task<IActionResult> OnPostAddOwnerToUsersAsync(int groupId, int ownerId)
         //{
         //    try

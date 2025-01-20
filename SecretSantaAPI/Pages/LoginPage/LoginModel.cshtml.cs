@@ -7,28 +7,30 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Identity.Client;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using DataAccess.Models;
-using NuGet.Common;
+using Microsoft.EntityFrameworkCore;
+
+using DataAccess.UserViewModels;
 
 namespace SecretSantaAPI.Pages.LoginPage
 {
     public class LoginModel : PageModel
     {
+        private readonly SecretSantaContext _context;
         private readonly IAuthService _authService;
         private readonly IRepository _repository;
         private readonly ITokenService _tokenService;
         private readonly IUserService _userService;
 
-        public LoginModel(IAuthService authService, IRepository repository, ITokenService tokenService, IUserService userService)
+        public LoginModel(IAuthService authService, IRepository repository, ITokenService tokenService, IUserService userService, SecretSantaContext context)
         {
             _authService = authService;
             _repository = repository;
             _tokenService = tokenService;
             this._userService = userService;
+            _context = context;
         }
 
         [BindProperty]
@@ -36,6 +38,25 @@ namespace SecretSantaAPI.Pages.LoginPage
 
         public string EmailError { get; set; } = string.Empty;
         public string PasswordError { get; set; } = string.Empty;
+
+        // New properties for group data
+        public bool IsGroupOwner { get; set; }
+
+        // List of groups the user participates in
+        public List<Group> ParticipatingGroups { get; set; } = new();
+
+        // List of groups the user has created (owns)
+        public List<Group> CreatedGroups { get; set; } = new();
+
+        [BindProperty]
+        public UserViewModel UserViewModel { get; set; } = new UserViewModel();
+
+        [BindProperty(SupportsGet = true)]
+        public string UserId { get; set; }
+
+        public string Token { get; set; }
+        public string Message { get; set; }
+
         public class InputModel
         {
             [Required]
@@ -45,13 +66,37 @@ namespace SecretSantaAPI.Pages.LoginPage
             [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; }
+
             public bool RememberMe { get; set; }
         }
 
-        public void OnGet()
+        public async Task OnGet()
         {
             Input = new InputModel();
+
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                RedirectToPage("/Account/Login");
+                return;
+            }
+
+            // Check if the user is the owner of any group
+            IsGroupOwner = await _context.Groups
+                .AnyAsync(g => g.OwnerUserID == userId);
+
+            // Fetch participating groups where the user is a member
+            ParticipatingGroups = await _context.UsersGroups
+                .Where(ug => ug.UserID == userId)
+                .Select(ug => ug.Groups)
+                .ToListAsync();
+
+            // Fetch groups created by the user (as an owner)
+            CreatedGroups = await _context.Groups
+                .Where(g => g.OwnerUserID == userId)
+                .ToListAsync();
         }
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (string.IsNullOrEmpty(Input.Email) || string.IsNullOrEmpty(Input.Password))

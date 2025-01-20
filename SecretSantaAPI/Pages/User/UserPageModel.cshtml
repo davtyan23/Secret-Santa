@@ -36,21 +36,46 @@
                                 <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
 
                                 <!-- Button to add owner to participants -->
-                                <form method="post" asp-page-handler="AddOwnerToUsers" class="mt-2">
-                                    <input type="hidden" name="groupId" value="@group.GroupID" />
-                                    <input type="hidden" name="ownerId" value="@Model.UserViewModel.UserPass.UserId" />
-                                    <button type="submit" class="btn btn-secondary btn-sm">
-                                        Add Owner to Participants
-                                    </button>
-                                </form>
+                                @if (Model.IsGroupOwner)
+                                {
+                                    <div class="mt-2">
+                                        <label>Invitation Link:</label>
+                                        <div class="input-group mt-2">
+                                            <!-- Print the generated URL for debugging -->
+                                            <p>@Url.Page("/JoinGroup", null, new { token = group.InvitationToken }, Request.Scheme)</p>
+
+                                            <!-- Display the invitation link in a readonly input field -->
+                                            <input type="text" class="form-control"
+                                                   value="@Url.Page("/JoinGroup", null, new { token = group.InvitationToken }, Request.Scheme)" readonly />
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="copyToClipboard(this)">
+                                                Copy Link
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Share this link to invite users to the group.</small>
+                                    </div>
+                                }
                             </li>
                         }
                     </ul>
                 }
-                else
-                {
-                    <p>No groups created yet.</p>
+
+                @section Scripts {
+                    <script>
+                        function copyToClipboard(button) {
+                            const input = button.previousElementSibling;
+                            input.select();
+                            input.setSelectionRange(0, 99999); // For mobile devices
+                            navigator.clipboard.writeText(input.value)
+                                .then(() => {
+                                    button.textContent = "Copied!";
+                                    setTimeout(() => button.textContent = "Copy Link", 2000);
+                                })
+                                .catch(err => alert("Failed to copy the link"));
+                        }
+                    </script>
                 }
+
+
             </div>
 
             <!-- Secret Santa Groups User Participates In -->

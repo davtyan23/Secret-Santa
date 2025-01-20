@@ -71,7 +71,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.Cookie.Name = "AuthToken"; // Name for the authentication cookie
-        options.LoginPath = "/Account/Login"; // Redirect to Login on unauthorized
+        options.LoginPath = "/LoginPage/Login"; // Redirect to Login on unauthorized
         options.AccessDeniedPath = "/Account/AccessDenied"; // Redirect on access denied
         options.ExpireTimeSpan = TimeSpan.FromHours(1); // Cookie expiration
         options.SlidingExpiration = true; // Refresh cookie expiration on use
