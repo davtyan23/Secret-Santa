@@ -3,7 +3,6 @@ using DataAccess.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-
 namespace SecretSantaAPI.Pages.Groups
 {
     public class JoinGroupModel : PageModel
@@ -18,9 +17,9 @@ namespace SecretSantaAPI.Pages.Groups
         public bool UserIsAuthenticated => User.Identity?.IsAuthenticated ?? false;
         [BindProperty(SupportsGet = true)]
         public string Token { get; set; }
-        public void OnGet()
+        public void OnGet(string token)
         {
-            if (string.IsNullOrWhiteSpace(Token))
+            if (string.IsNullOrWhiteSpace(token))
             {
                 Response.Redirect("/Error");
             }
@@ -30,14 +29,14 @@ namespace SecretSantaAPI.Pages.Groups
         {
             if (!UserIsAuthenticated)
             {
-                return RedirectToPage("/Login"); // Redirect unauthenticated users to login
+                return RedirectToPage("/Login");
             }
 
             // Get user ID from claims
             var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
             if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId))
             {
-                return RedirectToPage("/Error"); // Redirect if user ID is missing or invalid
+                return RedirectToPage("/Error");
             }
 
             // Validate the token and get the group ID
@@ -51,10 +50,10 @@ namespace SecretSantaAPI.Pages.Groups
             var success = await _repository.AddUserToGroupAsync(parsedUserId, groupId.Value);
             if (!success)
             {
-                return RedirectToPage("/Error"); // Redirect if adding the user fails
+                return RedirectToPage("/Error");
             }
 
-            return RedirectToPage("/GroupDetails", new { id = groupId }); // Redirect to the group details page
+            return RedirectToPage("/UserView", new { id = groupId }); // Redirect to the group details page
         }
 
 

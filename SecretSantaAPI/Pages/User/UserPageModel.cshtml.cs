@@ -136,7 +136,7 @@ namespace SecretSantaAPI.Pages.User
             {
                 if (!string.IsNullOrEmpty(group.InvitationToken))
                 {
-                    var generatedLink = $"{Request.Scheme}://{Request.Host}/JoinGroup?token={group.InvitationToken}";
+                    var generatedLink = $"{Request.Scheme}://{Request.Host}/Groups/JoinGroup?token={group.InvitationToken}";
                     Console.WriteLine($"Group: {group.GroupName}, Link: {generatedLink}");
                 }
                 else

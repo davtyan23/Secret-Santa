@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddMvcCore();
-builder.Services.AddRazorPages(); // Add Razor Pages service
+builder.Services.AddRazorPages(); // Add Razor Pages support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -49,24 +49,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-//Add Authorization policy
+// Authorization policy
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ParticipantPolicy", policy =>
         policy.RequireRole("Admin")); // Example role-based policy
 });
 
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("ParticipantPolicy", policy =>
-//        policy.RequireAssertion(context =>
-//            context.User.HasClaim("role", "Participant") ||
-//            context.User.HasClaim("role", "Owner") ||
-//            context.User.HasClaim("role", "Admin"))); // Allow owners
-//});
-
-
-// Configure Cookie Authentication for browser sessions
+// Configure Cookie and JWT Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
@@ -101,7 +91,7 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
-// Configure other services
+// Add database context and services
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<SecretSantaContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IRepository, Repository>();
@@ -132,7 +122,13 @@ app.UseAuthorization(); // Enable Authorization Middleware
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// Map Razor Pages with route constraints
+app.MapRazorPages(); // Ensure this is present to enable Razor Pages routing
+
+// Map Controllers
 app.MapControllers();
-app.MapRazorPages(); // Map Razor Pages routes
+
+// Add support for custom Razor Pages routes
+app.MapFallbackToPage("/Groups/JoinGroup/{token}", "/Groups/JoinGroup"); // Ensure token-based routing works
 
 app.Run();

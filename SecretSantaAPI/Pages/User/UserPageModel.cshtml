@@ -44,7 +44,7 @@
                                             <!-- Generate the invitation URL based on the token stored in the database -->
                                             <input type="text"
                                                    class="form-control"
-                                                   value="@($"{Request.Scheme}://{Request.Host}/JoinGroup?token={group.InvitationToken}")"
+                                                   value="@($"{Request.Scheme}://{Request.Host}/Groups/JoinGroup?token={group.InvitationToken}")"
                                                    readonly />  /* a sho tut delat' */
                                             <button type="button" class="btn btn-secondary btn-sm" onclick="copyToClipboard(this)">
                                                 Copy Link
