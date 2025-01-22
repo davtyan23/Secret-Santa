@@ -23,5 +23,7 @@ namespace DataAccess.Repositories
         Task AddUserPassesAsync(UserPass newUserPass);
         // Task UpdatePasswordResetAsync(PasswordReset passwordReset);
         Task<bool> IsEmailTakenAsync(string email);
+        Task<bool> AddUserToGroupAsync(int userId, int groupId);
+        Task<int?> ValidateTokenAsync(string token);
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-
 using System.Text;
+using Azure;
 
 //using System.Data.Entity;
 using DataAccess.Models;
@@ -339,17 +339,24 @@ namespace DataAccess.Repositories
             return group;
         }
 
-       /* public async Task<string> GetGroupLinkAsync(Group group)
+
+       public async Task<int?> ValidateTokenAsync(string token)
         {
-            if (string.IsNullOrEmpty(group.InvitationToken))
-            {
-                throw new InvalidOperationException("Group does not have a valid invitation token.");
-            }
+            var group = await _context.Groups.FirstOrDefaultAsync(g => g.InvitationToken == token);
+            return group?.OwnerUserID;
+        }
 
-            
+        /* public async Task<string> GetGroupLinkAsync(Group group)
+         {
+             if (string.IsNullOrEmpty(group.InvitationToken))
+             {
+                 throw new InvalidOperationException("Group does not have a valid invitation token.");
+             }
 
-            // Replace with your actual API domain
-            return $"https://localhost:7195/join-group?token={group.InvitationToken}";
-        }*/
+
+
+             // Replace with your actual API domain
+             return $"https://localhost:7195/join-group?token={group.InvitationToken}";
+         }*/
     }
 }

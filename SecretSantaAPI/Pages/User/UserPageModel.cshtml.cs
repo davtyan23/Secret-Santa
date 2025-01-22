@@ -63,6 +63,7 @@ namespace SecretSantaAPI.Pages.User
         public string Message { get; set; }
         public async Task OnGet()
         {
+
             // Redirect if the user is not authenticated
             if (!User.Identity.IsAuthenticated)
             {
@@ -129,6 +130,20 @@ namespace SecretSantaAPI.Pages.User
                 .ToListAsync();
 
             Console.WriteLine($"Created groups count: {CreatedGroups.Count}");
+
+            Console.WriteLine("Generated Links for Created Groups:");
+            foreach (var group in CreatedGroups)
+            {
+                if (!string.IsNullOrEmpty(group.InvitationToken))
+                {
+                    var generatedLink = $"{Request.Scheme}://{Request.Host}/JoinGroup?token={group.InvitationToken}";
+                    Console.WriteLine($"Group: {group.GroupName}, Link: {generatedLink}");
+                }
+                else
+                {
+                    Console.WriteLine($"Group: {group.GroupName}, No token available.");
+                }
+            }
 
             // Determine if the user is the owner of any group
             IsGroupOwner = CreatedGroups.Count > 0;  // Use Count > 0 instead of Any()
@@ -236,7 +251,7 @@ namespace SecretSantaAPI.Pages.User
 
             return RedirectToPage();
         }
+        
 
     }
-
 }
