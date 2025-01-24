@@ -2,6 +2,7 @@ using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 
 namespace SecretSantaAPI.Pages.Groups
 {
@@ -14,7 +15,8 @@ namespace SecretSantaAPI.Pages.Groups
            _context = context;
            _repository = repository;
         }
-        public bool UserIsAuthenticated => User.Identity?.IsAuthenticated ?? false;
+        public bool UserIsAuthenticated => User.Identity.IsAuthenticated;
+
         [BindProperty(SupportsGet = true)]
         public string Token { get; set; }
         public void OnGet(string token)
@@ -29,34 +31,35 @@ namespace SecretSantaAPI.Pages.Groups
         {
             if (!UserIsAuthenticated)
             {
-                return RedirectToPage("/Login");
+                return RedirectToPage("Pages/LoginPage/Login");
             }
 
             // Get user ID from claims
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId))
             {
                 return RedirectToPage("/Error");
             }
 
             // Validate the token and get the group ID
-            var groupId = await _repository.ValidateTokenAsync(Token);
-            if (groupId == null)
+            var group = await _repository.GetGroupByTokenAsync(Token);
+            if (group == null)
             {
-                return RedirectToPage("/Error"); // Redirect if the token is invalid or group not found
+                return RedirectToPage("/Error");
             }
 
-            // Safely use the groupId by casting it to int
-            var success = await _repository.AddUserToGroupAsync(parsedUserId, groupId.Value);
+            var success = await _repository.AddUserToGroupAsync(parsedUserId, group.GroupID);
             if (!success)
             {
                 return RedirectToPage("/Error");
             }
 
-            return RedirectToPage("/UserView", new { id = groupId }); // Redirect to the group details page
+            return RedirectToPage("/LoginPage/Login", new { id = group }); 
         }
 
-
-
+        //public async Task<IActionResult> OnPostJoinGroupAsync(int id)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

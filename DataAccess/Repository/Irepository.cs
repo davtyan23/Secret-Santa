@@ -25,5 +25,9 @@ namespace DataAccess.Repositories
         Task<bool> IsEmailTakenAsync(string email);
         Task<bool> AddUserToGroupAsync(int userId, int groupId);
         Task<int?> ValidateTokenAsync(string token);
+        Task<Group?> GetGroupByTokenAsync(string invitationToken);
+        string GenerateInvitationToken(int groupId);
+        Task<Group> CreateGroupAsync(Group group);
+
     }
 }

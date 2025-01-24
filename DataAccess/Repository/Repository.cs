@@ -1,5 +1,6 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Azure;
 
@@ -259,10 +260,9 @@ namespace DataAccess.Repositories
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
             {
-                return false; // User not found
+                return false;
             }
 
-            // Check if the group exists
             var group = await _context.Groups.FindAsync(groupId);
             if (group == null)
             {
@@ -297,10 +297,11 @@ namespace DataAccess.Repositories
             }
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]);
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
             try
             {
+                // Validate token
                 tokenHandler.ValidateToken(invitationToken, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -310,6 +311,7 @@ namespace DataAccess.Repositories
                     ClockSkew = TimeSpan.Zero
                 }, out SecurityToken validatedToken);
 
+                // Extract claims from JWT
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var groupId = jwtToken.Claims.FirstOrDefault(c => c.Type == "groupId")?.Value;
 
@@ -326,25 +328,85 @@ namespace DataAccess.Repositories
             return null;
         }
 
-        public string GenerateInvitationToken()
+
+        public string GenerateInvitationToken(int groupId)
         {
-            return Guid.NewGuid().ToString();
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            // Define token claims
+            var claims = new[]
+            {
+            new Claim("groupId", groupId.ToString()),
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(4), 
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
 
         public async Task<Group> CreateGroupAsync(Group group)
         {
-            group.InvitationToken = GenerateInvitationToken(); // Assign a new token
             _context.Groups.Add(group);
+            await _context.SaveChangesAsync(); 
+
+            // Generate and assign the invitation token
+            group.InvitationToken = GenerateInvitationToken(group.GroupID);
+            _context.Groups.Update(group);
             await _context.SaveChangesAsync();
+
             return group;
         }
 
 
-       public async Task<int?> ValidateTokenAsync(string token)
+
+        public async Task<int?> ValidateTokenAsync(string token)
         {
-            var group = await _context.Groups.FirstOrDefaultAsync(g => g.InvitationToken == token);
-            return group?.OwnerUserID;
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            try
+            {
+                // Validate the token
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                // Extract groupId from claims
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var groupId = jwtToken.Claims.FirstOrDefault(c => c.Type == "groupId")?.Value;
+
+                if (int.TryParse(groupId, out int parsedGroupId))
+                {
+                    var group = await _context.Groups.FirstOrDefaultAsync(g => g.GroupID == parsedGroupId);
+                    return group?.OwnerUserID;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
         }
+
 
         /* public async Task<string> GetGroupLinkAsync(Group group)
          {

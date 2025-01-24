@@ -129,6 +129,6 @@ app.MapRazorPages(); // Ensure this is present to enable Razor Pages routing
 app.MapControllers();
 
 // Add support for custom Razor Pages routes
-app.MapFallbackToPage("/Groups/JoinGroup/{token}", "/Groups/JoinGroup"); // Ensure token-based routing works
+app.MapFallbackToPage("/Groups/JoinGroup", "/Groups/JoinGroup"); // Ensure token-based routing works
 
 app.Run();

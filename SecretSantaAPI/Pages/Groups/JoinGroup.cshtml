@@ -1,17 +1,18 @@
 ﻿@page
 @model SecretSantaAPI.Pages.Groups.JoinGroupModel
 
-	@if(Model.UserIsAuthenticated)
-	{
-		<h2>Join Group</h2>
-		<p>You have been invited to a group</p>
-		<form method="post">
-			<button type="submit" class="btn btn-primary">Join Group</button>
-		</form>
-	}
-	else
-	{
-		<p>You need to log in to join the group.</p>
-		<a href="/User/UserView">Log in</a>
-	}
+@if (Model.UserIsAuthenticated)
+{
+    <h2>Join Group</h2>
+    <p>You have been invited to a group.</p>
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary">Join Group</button>
+    </form>
+}
+else
+{
+    <p>You need to log in to join the group.</p>
+    <a asp-page="Pages/LoginPage/Login" class="btn btn-secondary">Log in</a>
+}
 
