@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 //using System.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 
-namespace SecretSantaAPI.Pages 
+namespace SecretSantaAPI.Pages.Admin
 {
     public class EditUser : PageModel
     {
@@ -97,7 +97,7 @@ namespace SecretSantaAPI.Pages
 
             var user = await _context.Users.FindAsync(User.Id);
             if (user == null)
-            { 
+            {
                 return NotFound();
             }
             var userPass = await _context.UserPasses
@@ -105,12 +105,24 @@ namespace SecretSantaAPI.Pages
                             .FirstOrDefaultAsync();
             if (userPass != null)
             {
-                _context.UserPasses.Remove(userPass); 
+                _context.UserPasses.Remove(userPass);
             }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             Console.WriteLine("DELETE");
+
+            return RedirectToPage("/UserView");
+        }
+
+        public async Task<IActionResult> OnPostIsActiveAsync()
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == User.Id);
+            if (user == null)
+                return NotFound();
+
+            user.IsActive = !user.IsActive;
+            await _context.SaveChangesAsync();
 
             return RedirectToPage("/UserView");
         }

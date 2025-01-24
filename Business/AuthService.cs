@@ -1,8 +1,10 @@
+using Azure.Core;
 using Business.DTOs.Request;
 using DataAccess;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,7 +14,7 @@ namespace Business
 {
     public class AuthService : IAuthService
     {
-
+       
         //private readonly UserManager<LoginRequest> _userManager; 
         //private readonly SignInManager<LoginRequest> _signInManager; // For handling sign in
 
@@ -61,6 +63,7 @@ namespace Business
             _repository = repository;
         }
 
+        private readonly string secretKey = "xHg6iFJTk+p6wO3e1w0eL7udN8l1jeQZ66FNOwAn2gE=\r\n";
 
         public string HashPass(string password)
         {
@@ -92,10 +95,17 @@ namespace Business
                 PassHash = HashPass(request.Password),
                 //CreatedAt = DateTime.Now
             };
-            
+            bool isEmailTaken = await _repository.IsEmailTakenAsync(request.Email);
+            if (isEmailTaken)
+            {
+                throw new Exception("The email address is already registered.");
+            }
             user.UserPass = newUserPass;
 
             var resp = await _repository.AddUserAsync(user);
+
+            var assignedRole = await _repository.RoleAssigning(user.Id, RoleIdEnum.Participant);
+
             newUserPass.UserId = resp.Id;
             await _repository.AddUserPassesAsync(newUserPass);//pass
             return newUserPass.UserId.ToString();
@@ -115,11 +125,49 @@ namespace Business
             return regex.IsMatch(password);
         }
         //ste tema ka
+
         public async Task<UserPass> SignInAsync(LoginRequestDTO login)
         {
-            var user = await _repository.GetUserByEmailAsync(login.Email);
-            return user;
+
+            // Validate input
+            if (login == null || string.IsNullOrEmpty(login.Email) || string.IsNullOrEmpty(login.Password))
+            {
+                throw new ArgumentException("Invalid login details.");
+            }
+
+            // Retrieve user based on email
+            User user = await _repository.GetUserByEmailAsync(login.Email);
+            if (user == null || !user.IsActive)
+            {
+                throw new UnauthorizedAccessException("User not found or inactive.");
+            }
+
+            user.UserPass = await _repository.GetUserPassByEmailAsync(login.Email);
+            if(user.UserPass == null)
+            {
+                throw new UnauthorizedAccessException("User pass not found.");
+            }
+
+            //user.UserPass.PassHash;
+
+            // Validate password (assuming hashed passwords)
+            bool isPasswordValid = VerifyPass(login.Password, user.UserPass.PassHash);
+            if (!isPasswordValid)
+            {
+                throw new UnauthorizedAccessException("Invalid credentials.");
+            }
+
+            var claims = new[]
+            {
+                new Claim(user.FirstName, user.UserPass.Email.ToString())  
+            };
+
+            await _repository.UpdateUserAsync(user);
+
+            // Return the UserPass objects
+            return user.UserPass;
         }
+
 
         /*   public IRepository Get_repository()
            {

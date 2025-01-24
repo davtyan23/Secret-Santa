@@ -1,14 +1,21 @@
 ﻿/* Global Page Styles */
-/*body {
-    background-color: dimgrey;
-    color: white;*/ /* Text contrast for dark background */
-    /*font-family: Arial, sans-serif;
+body {
+    background-color: red;
+    color: white;  
+    font-family: Arial, sans-serif;
+        display: flex;
+    flex-direction: column;
     margin: 0;
     padding: 0;
-}*/
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
 
-/* Navbar Styles */
-/*.navbar {
+/* Navbar Styles 
+.navbar {
     background-color: #212529;
     color: white;
 }
@@ -21,30 +28,42 @@
 
     .navbar-brand:hover {
         color: #d4d4d4;
-    }*/
+    }
+*/
 
-/* Table Styles */
-/*table {
-    width: 100%;
+/*Table Styles */
+table {
     border-collapse: collapse;
-    background-color: darkslategrey;
-    color: black;
+    width: 100%;
+    border: 2px solid black;
+    border-radius:50px;
 }
 
-    table th,
-    table td {
-        border: 1px solid black;
-        padding: 8px;
-        text-align: left;
-    }
+th, td {
+    border: 2px solid black;
+    padding: 8px;
+    text-align: left;
+}
 
-    table th {
-        background-color: #343a40;
-        color: white;
-    }*/
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+    animation-delay: 1s;
+    animation-duration: 3s;
+}
+
+tr:hover {
+    background-color: #E4E6EB;
+    transition-duration: .3s;
+}
+
 
 /* Buttons */
-/*.btn-primary {
+.btn-primary {
     background-color: #007bff;
     border-color: #007bff;
 }
@@ -57,10 +76,10 @@
 .btn-danger {
     background-color: #dc3545;
     border-color: #dc3545;
-}*/
+}
 
 /* Active/Inactive Badges */
-/*.badge {
+.badge {
     font-size: 0.9em;
     padding: 0.4em;
 }
@@ -73,24 +92,24 @@
 .bg-danger {
     background-color: red !important;
     color: white;
-}*/
+}
 /* Form Styling */
-/*form {
-    max-width: 600px;
-    margin: 0 auto;*/ /* Center the form */
-    /*background-color: #f8f9fa;*/ /* Light grey background */
-    /*padding: 20px;
+form {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #FAFBFB;
+    padding: 20px;
     border-radius: 5px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}*/
+}
 
-    /* Form Labels */
-    /*form .form-label {
+    /*Form Labels*/ 
+    form .form-label {
         font-weight: bold;
-    }*/
-
+    }
+  
     /* Buttons */
-    /*form .btn-primary {
+    form .btn-primary {
         background-color: #007bff;
         border-color: #007bff;
         margin-right: 10px;
@@ -99,9 +118,18 @@
     form .btn-secondary {
         background-color: #6c757d;
         border-color: #6c757d;
-    }*/
+    }
 
-/* Validation Messages */
-/*.text-danger {
+.text-danger {
     font-size: 0.9em;
-}*/
+}
+
+.footer {
+    position: static;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: red;
+    color: white;
+    text-align: center;
+}

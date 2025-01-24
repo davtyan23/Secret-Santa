@@ -1,21 +1,22 @@
-using Business;
-using DataAccess;
 using Business.Services;
+using Business;
 using DataAccess.Models;
 using DataAccess.Repositories;
+using DataAccess;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using SecretSantaAPI.Controllers;
-using System.Text;
 using SecretSantaAPI;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
-builder.Services.AddRazorPages(); // Add Razor Pages service
+builder.Services.AddMvcCore();
+builder.Services.AddRazorPages(); // Add Razor Pages support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -52,42 +53,36 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ParticipantPolicy", policy =>
-        policy.RequireRole("Participant"));
+        policy.RequireRole("Admin")); // Example role-based policy
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Register DbContext, repositories, and other services
-builder.Services.AddDbContext<SecretSantaContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddScoped<IRepository, Repository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEmailSender, EmailSender>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<ILoggerAPI, LoggerAPI>(); // Correct registration
-
-builder.Services.AddOptions<SmtpOptions>().BindConfiguration(nameof(SmtpOptions));
-
-// Register EmailSender as a Singleton
-builder.Services.AddSingleton<EmailSender>();
-
-// Configure JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters()
+// Configure Cookie and JWT Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
-        RequireExpirationTime = true,
-        ValidateLifetime = true,
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-    };
-});
+        options.Cookie.Name = "AuthToken"; // Name for the authentication cookie
+        options.LoginPath = "/LoginPage/Login"; // Redirect to Login on unauthorized
+        options.AccessDeniedPath = "/Account/AccessDenied"; // Redirect on access denied
+        options.ExpireTimeSpan = TimeSpan.FromHours(1); // Cookie expiration
+        options.SlidingExpiration = true; // Refresh cookie expiration on use
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        options.RequireHttpsMetadata = false; // Disable for dev; enable in prod
+        options.SaveToken = true; // Save token in the request context
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            RequireExpirationTime = true,
+            ValidateLifetime = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
 
+// Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
@@ -96,8 +91,23 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
+// Add database context and services
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<SecretSantaContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddScoped<IRepository, Repository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ILoggerAPI, LoggerAPI>();
+builder.Services.AddOptions<SmtpOptions>().BindConfiguration(nameof(SmtpOptions));
+
+// Register EmailSender as Singleton
+builder.Services.AddSingleton<EmailSender>();
+
 var app = builder.Build();
 
+// Middleware pipeline
 app.UseCors("AllowAllOrigins");
 
 if (app.Environment.IsDevelopment())
@@ -106,13 +116,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseHttpsRedirection();
-app.UseAuthorization();
+app.UseAuthentication(); // Enable Authentication Middleware
+app.UseAuthorization(); // Enable Authorization Middleware
 
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// Map Razor Pages with route constraints
+app.MapRazorPages(); // Ensure this is present to enable Razor Pages routing
+
+// Map Controllers
 app.MapControllers();
-app.MapRazorPages(); // Map Razor Pages routes
+
+// Add support for custom Razor Pages routes
+app.MapFallbackToPage("/Groups/JoinGroup", "/Groups/JoinGroup"); // Ensure token-based routing works
 
 app.Run();

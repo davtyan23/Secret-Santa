@@ -50,6 +50,7 @@ namespace SecretSantaAPI.Controllers
         {
             var users = await _userService.GetPaginatedUsersAsync(limit, offset);
             return Ok(users);
+           
         }
 
         // GET: api/users/active

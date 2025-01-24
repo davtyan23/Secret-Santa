@@ -84,7 +84,7 @@ namespace SecretSantaAPI.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<IActionResult> Register(Business.RegisterRequest request)
+        public async Task<IActionResult> Register(RegisterRequest request)
         {
             var isValid = _authService.IsValidEmail(request.Email);
             string resp = String.Empty;
@@ -104,7 +104,8 @@ namespace SecretSantaAPI.Controllers
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
-                Password = request.Password
+                Password = request.Password,
+                PhoneNumber = request.PhoneNumber,
             };
 
             try
@@ -118,7 +119,6 @@ namespace SecretSantaAPI.Controllers
 
             return Ok(new { UserId = resp, Message = "Register was successful" });
         }
-
 
     }
 }

@@ -1,9 +1,16 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Azure;
+
 //using System.Data.Entity;
 using DataAccess.Models;
 using DataAccess.UserViewModels;
-
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DataAccess.Repositories
 {
@@ -11,11 +18,13 @@ namespace DataAccess.Repositories
     {
         private readonly SecretSantaContext _context;
         private readonly ILoggerAPI _loggerAPI;
+        private readonly IConfiguration _configuration;
 
-        public Repository(SecretSantaContext context, ILoggerAPI loggerAPI)
+        public Repository(SecretSantaContext context, ILoggerAPI loggerAPI, IConfiguration configuration)
         {
             _context = context;
             _loggerAPI = loggerAPI;
+            _configuration = configuration;
         }
 
         public Task<List<User>> GetPaginatedUsersAsync(int limit, int offset)
@@ -94,8 +103,8 @@ namespace DataAccess.Repositories
             var user = await _context.Users.FindAsync(id);
             return user;
         }
-        
-        public async Task<string> GetRoleById(int id)
+
+        public async Task<string> GetRoleById(RoleIdEnum id)
         {
             var role = await _context.Roles.FindAsync(id);
             var roleName = role == null ? null : role.RoleName;
@@ -121,9 +130,19 @@ namespace DataAccess.Repositories
         }
 
 
-        public async Task<UserPass> GetUserByEmailAsync(string email)
+        public async Task<User> GetUserByEmailAsync(string email)
         {
-            var result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
+            User result = _context.Users.FirstOrDefault(u => u.UserPass.Email == email);
+            if (result == null)
+            {
+                return new User { };
+            }
+            else return result;
+        }
+
+        public async Task<UserPass> GetUserPassByEmailAsync(string email)
+        {
+            UserPass result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
             if (result == null)
             {
                 return new UserPass { };
@@ -137,9 +156,9 @@ namespace DataAccess.Repositories
                 .FirstOrDefaultAsync(ar => ar.UserId == userId) ?? new AssignedRole();
         }
 
-        public async Task<AssignedRole> RoleAssigning(int userId, int roleId)
+        public async Task<AssignedRole> RoleAssigning(int userId, RoleIdEnum roleId)
         {
-            var role = await _context.Roles.FindAsync(roleId);
+            var role = await _context.Roles.FindAsync(roleId); // maybe int convert
             if (role == null)
             {
                 _loggerAPI.Error($"Role with ID {roleId} not found.");
@@ -165,7 +184,7 @@ namespace DataAccess.Repositories
             var newAssignedRole = new AssignedRole
             {
                 UserId = userId,
-                RoleId = roleId
+                RoleId = (RoleIdEnum)roleId
             };
 
             await _context.AssignedRoles.AddAsync(newAssignedRole);
@@ -215,6 +234,191 @@ namespace DataAccess.Repositories
 
         }
 
+        public async Task<bool> IsEmailTakenAsync(string email)
+        {
+            var user = await _context.UserPasses.FirstOrDefaultAsync(u => u.Email == email);
+            return user != null;
+        }
 
+        public async Task<List<Group>> GetGroupsAsync(int userId)
+        {
+            return await _context.UsersGroups
+                .Where(ug => ug.UserID == userId)
+                .Select(ug => ug.Groups)
+                .ToListAsync();
+        }
+
+        public async Task<Group> GetGroupByIdAsync(int groupId)
+        {
+            return await _context.Groups
+                .FirstOrDefaultAsync(g => g.GroupID == groupId);
+        }
+
+        public async Task<bool> AddUserToGroupAsync(int userId, int groupId)
+        {
+            // Check if the user exists
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var group = await _context.Groups.FindAsync(groupId);
+            if (group == null)
+            {
+                return false; // Group not found
+            }
+
+            // Check if the user is already in the group
+            var existingUserGroup = await _context.UsersGroups
+                .FirstOrDefaultAsync(ug => ug.UserID == userId && ug.GroupID == groupId);
+            if (existingUserGroup != null)
+            {
+                return false; // User is already in the group
+            }
+
+            // Add the user to the group
+            var userGroup = new UserGroup
+            {
+                UserID = userId,
+                GroupID = groupId
+            };
+
+            await _context.UsersGroups.AddAsync(userGroup);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Group?> GetGroupByTokenAsync(string invitationToken)
+        {
+            if (string.IsNullOrWhiteSpace(invitationToken))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            try
+            {
+                // Validate token
+                tokenHandler.ValidateToken(invitationToken, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                // Extract claims from JWT
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var groupId = jwtToken.Claims.FirstOrDefault(c => c.Type == "groupId")?.Value;
+
+                if (int.TryParse(groupId, out int parsedGroupId))
+                {
+                    return await _context.Groups.FirstOrDefaultAsync(g => g.GroupID == parsedGroupId);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+
+        public string GenerateInvitationToken(int groupId)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            // Define token claims
+            var claims = new[]
+            {
+            new Claim("groupId", groupId.ToString()),
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(4), 
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<Group> CreateGroupAsync(Group group)
+        {
+            _context.Groups.Add(group);
+            await _context.SaveChangesAsync(); 
+
+            // Generate and assign the invitation token
+            group.InvitationToken = GenerateInvitationToken(group.GroupID);
+            _context.Groups.Update(group);
+            await _context.SaveChangesAsync();
+
+            return group;
+        }
+
+
+
+        public async Task<int?> ValidateTokenAsync(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            try
+            {
+                // Validate the token
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                // Extract groupId from claims
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var groupId = jwtToken.Claims.FirstOrDefault(c => c.Type == "groupId")?.Value;
+
+                if (int.TryParse(groupId, out int parsedGroupId))
+                {
+                    var group = await _context.Groups.FirstOrDefaultAsync(g => g.GroupID == parsedGroupId);
+                    return group?.OwnerUserID;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+
+        /* public async Task<string> GetGroupLinkAsync(Group group)
+         {
+             if (string.IsNullOrEmpty(group.InvitationToken))
+             {
+                 throw new InvalidOperationException("Group does not have a valid invitation token.");
+             }
+
+
+
+             // Replace with your actual API domain
+             return $"https://localhost:7195/join-group?token={group.InvitationToken}";
+         }*/
     }
 }

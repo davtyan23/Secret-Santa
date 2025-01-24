@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.AspNetCore.Mvc;
 
-namespace SecretSantaAPI.Pages
+namespace SecretSantaAPI.Pages.Admin
 {
     public class UserView : PageModel
     {
@@ -23,7 +23,7 @@ namespace SecretSantaAPI.Pages
 
         // OnGet method to fetch users from the database
         public async Task OnGet(string searchQuery)
-         {
+        {
             var query = _context.Users.AsQueryable();
 
             if (!string.IsNullOrEmpty(searchQuery))

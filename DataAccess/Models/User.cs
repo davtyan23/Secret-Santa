@@ -16,6 +16,8 @@ public partial class User
     public bool IsActive { get; set; }
     public DateTime RegisterTime { get; set; }
 
+    //public string Token { get; set; } = null!;
+
     public virtual ICollection<AssignedRole> AssignedRoles { get; set; } = new List<AssignedRole>();
 
     public virtual UserPass? UserPass { get; set; }// = new List<UserPass>();

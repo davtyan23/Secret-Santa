@@ -5,9 +5,10 @@ namespace DataAccess.Models;
 
 public partial class Role
 {
-    public int RoleId { get; set; }
+    public RoleIdEnum RoleId { get; set; }
 
     public string RoleName { get; set; } = null!;
 
-    public virtual ICollection<AssignedRole> AssignedRoles { get; set; } = new List<AssignedRole>();
+   // public virtual ICollection<AssignedRole> AssignedRoles { get; set; } = new List<AssignedRole>();
+   // public ICollection<Groups> UserRolesGroups { get; set; }
 }

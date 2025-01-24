@@ -1,6 +1,5 @@
 ﻿@page
-@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-@model SecretSantaAPI.Pages.EditUser
+@model SecretSantaAPI.Pages.Admin.EditUser
 @{
     ViewData["Title"] = "Edit User";
 }
@@ -11,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
-    <link href="/css/Styles.css" rel="stylesheet" />
+    @* <link href="/css/Styles.css" rel="stylesheet" /> *@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 
@@ -40,6 +39,7 @@
 
     <button type="submit" asp-page-handler="Save" class="btn btn-primary">Save</button>
     <button type="submit" asp-page-handler="Delete" class="btn btn-danger">Delete</button>
+    <button type="submit" asp-page-handler="IsActive" class="btn btn-danger">IsActive</button>
 </form>
 
 <!-- Delete button -->
