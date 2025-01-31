@@ -35,7 +35,9 @@
                                 <p><strong>Location:</strong> @group.GroupLocation</p>
                                 <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
 
-                                <!-- Button to add owner to participants -->
+                                <form method="post">
+                                    <button type="submit" class="btn btn-primary">Start Draw</button>
+                                </form>
                                 @if (Model.IsGroupOwner)
                                 {
                                     <div class="mt-2">
@@ -45,7 +47,7 @@
                                             <input type="text"
                                                    class="form-control"
                                                    value="@($"{Request.Scheme}://{Request.Host}/Groups/JoinGroup?token={group.InvitationToken}")"
-                                                   readonly />  /* a sho tut delat' */
+                                                   readonly />  
                                             <button type="button" class="btn btn-secondary btn-sm" onclick="copyToClipboard(this)">
                                                 Copy Link
                                             </button>

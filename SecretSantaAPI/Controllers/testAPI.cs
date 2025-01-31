@@ -62,27 +62,30 @@ namespace SecretSantaAPI.Controllers
         }
 
         [HttpGet("ById")]
-        public async Task<ActionResult<DataAccess.Models.User>> GetUsersById(int id)
+        public async Task<ActionResult<DataAccess.Models.User>> GetUserById(int id)
         {
-            var user = await _userService.GetUsersByIdAsync(id);
+            var user = await _userService.GetUserByIdAsync(id); 
             if (user == null)
             {
-                return NotFound($"User with ID {id} not found."); 
+                return NotFound($"User with ID {id} not found.");
             }
             return Ok(user);
         }
-        // POST: api/users/calculate
 
+        // POST: api/users/deactivate
         [HttpPost("Deactivate")]
-        public async Task DeactivateUserAsync(int id)
+        public async Task<IActionResult> DeactivateUserAsync(int id)
         {
-            var user = await _userService.GetUsersByIdAsync(id);
-            if (user != null)
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
             {
-                user.IsActive = false;
-                await _userService.UpdateUsersAsync(user);
+                return NotFound($"User with ID {id} not found.");
             }
 
+            user.IsActive = false;
+            await _userService.UpdateUsersAsync(user);
+
+            return Ok($"User with ID {id} has been deactivated.");
         }
 
         [HttpPost("Calculate")]

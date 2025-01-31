@@ -3,6 +3,7 @@ using Business;
 using DataAccess.Models;
 using DataAccess.Repositories;
 using Business.DTOs.Request;
+using Microsoft.EntityFrameworkCore;
 
 
 public class UserService : IUserService
@@ -30,10 +31,14 @@ public class UserService : IUserService
         var result = _repository.GetAllActiveUsersAsync();
         return result;
     }
-
-    public Task<User> GetUsersByIdAsync(int id)
+    public async Task<User> GetUserByIdAsync(int userId)
     {
-        return _repository.GetUsersByIdAsync(id);
+        return await _repository.GetUserByIdAsync(userId);
+    }
+
+    public Task<List<User>> GetUsersByIdAsync(List<int> userIds)
+    {
+        return _repository.GetUsersByIdAsync(userIds);
     }
 
     public Task<User> AddUsersAsync(User user)
@@ -71,7 +76,8 @@ public class UserService : IUserService
         }
 
         // Fetch user details and role
-        var user = await _repository.GetUsersByIdAsync(userPass.UserId);
+        var users = await _repository.GetUsersByIdAsync(new List<int> { userPass.UserId });
+        var user = users.FirstOrDefault();
         var role = await _repository.GetRoleByUserIdAsync(userPass.UserId);
         var roleName = await _repository.GetRoleById(role.RoleId);
 

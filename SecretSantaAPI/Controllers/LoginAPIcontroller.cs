@@ -48,7 +48,8 @@ namespace SecretSantaAPI.Controllers
             {
                 return Unauthorized("Invalid email or password");
             }
-            var user = await _repository.GetUsersByIdAsync(userPass.UserId);
+            var users = await _repository.GetUsersByIdAsync(new List<int> { userPass.UserId });
+            var user = users.FirstOrDefault();
             var role = await _repository.GetRoleByUserIdAsync(userPass.UserId);
             if (user == null)
             {

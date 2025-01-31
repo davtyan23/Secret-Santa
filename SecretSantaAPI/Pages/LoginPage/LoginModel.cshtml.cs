@@ -86,7 +86,7 @@ namespace SecretSantaAPI.Pages.LoginPage
                 .AnyAsync(g => g.OwnerUserID == userId);
 
             // Fetch participating groups where the user is a member
-            ParticipatingGroups = await _context.UsersGroups
+            ParticipatingGroups = await _context.UserGroups
                 .Where(ug => ug.UserID == userId)
                 .Select(ug => ug.Groups)
                 .ToListAsync();
@@ -156,7 +156,8 @@ namespace SecretSantaAPI.Pages.LoginPage
                 return Page();
             }
 
-            var user = await _repository.GetUsersByIdAsync(userPass.UserId);
+            var users = await _repository.GetUsersByIdAsync(new List<int> { userPass.UserId });
+            var user = users.FirstOrDefault();
             var role = await _repository.GetRoleByUserIdAsync(userPass.UserId);
             var roleName = await _repository.GetRoleById(role.RoleId);
 
@@ -172,7 +173,7 @@ namespace SecretSantaAPI.Pages.LoginPage
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddHours(1) // Expiry time for the token
+                Expires = DateTime.UtcNow.AddHours(1) 
             });
 
             return RedirectToPage("/User/UserPageModel", new { token, userPass.UserId, message = "Login successful" });

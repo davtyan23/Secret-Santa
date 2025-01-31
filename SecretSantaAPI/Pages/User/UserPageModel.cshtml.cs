@@ -28,6 +28,7 @@ namespace SecretSantaAPI.Pages.User
         public string PhoneNumber { get; set; } = null!;
 
         public bool IsActive { get; set; }
+
         public DateTime RegisterTime { get; set; }
 
         public virtual ICollection<AssignedRole> AssignedRoles { get; set; } = new List<AssignedRole>();
@@ -48,7 +49,7 @@ namespace SecretSantaAPI.Pages.User
             _loggerAPI = loggerAPI;
             _configuration = configuration;
         }
-
+        public int GroupId { get; set; }
         public bool IsGroupOwner { get; set; }
         public List<Group> ParticipatingGroups { get; set; } = new List<Group>();
         public List<Group> CreatedGroups { get; set; } = new List<Group>();
@@ -58,13 +59,11 @@ namespace SecretSantaAPI.Pages.User
 
         [BindProperty(SupportsGet = true)]
         public string UserId { get; set; }
-
         public string Token { get; set; }
         public string Message { get; set; }
         public async Task OnGet()
         {
 
-            // Redirect if the user is not authenticated
             if (!User.Identity.IsAuthenticated)
             {
                 RedirectToPage("/Account/Login");
@@ -113,11 +112,9 @@ namespace SecretSantaAPI.Pages.User
                 };
             }
 
-            Console.WriteLine($"User info populated: {UserViewModel.FirstName}, {UserViewModel.LastName}, {UserViewModel.PhoneNumber}");
-            Console.WriteLine($"TOKENNNNNN: {UserViewModel.LastName}, {UserViewModel.PhoneNumber}");
 
             // Retrieve groups where the user participates
-            ParticipatingGroups = await _context.UsersGroups
+            ParticipatingGroups = await _context.UserGroups
                 .Where(ug => ug.UserID == userId)
                 .Select(ug => ug.Groups)
                 .ToListAsync();
@@ -258,7 +255,6 @@ namespace SecretSantaAPI.Pages.User
 
             return RedirectToPage();
         }
-
 
 
     }

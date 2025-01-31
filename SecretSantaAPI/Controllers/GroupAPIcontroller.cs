@@ -104,7 +104,7 @@ namespace SecretSantaAPI.Controllers
             int userId = int.Parse(userIdClaim.Value);
 
             // Check if the user is already in the group
-            var existingMembership = await _context.UsersGroups
+            var existingMembership = await _context.UserGroups
                 .FirstOrDefaultAsync(ug => ug.UserID == userId && ug.GroupID == group.GroupID);
 
             if (existingMembership != null)
@@ -119,7 +119,7 @@ namespace SecretSantaAPI.Controllers
                 GroupID = group.GroupID
             };
 
-            _context.UsersGroups.Add(userGroup);
+            _context.UserGroups.Add(userGroup);
             await _context.SaveChangesAsync();
 
             return Ok("You have successfully joined the group.");
