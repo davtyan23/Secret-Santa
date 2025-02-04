@@ -21,7 +21,6 @@
         <h2>Welcome to your account, <b>@Model.UserViewModel.FirstName @Model.UserViewModel.LastName</b></h2>
 
         <div class="row mt-4">
-            <!-- Secret Santa Groups Created by User -->
             <div class="col-md-6">
                 <h3>Secret Santa Groups</h3>
                 @if (Model.CreatedGroups.Any())
@@ -36,22 +35,22 @@
                                 <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
 
                                 <form method="post">
+                                    <input type="hidden" name="InvitationToken" value="@group.InvitationToken" />
                                     <button type="submit" class="btn btn-primary">Start Draw</button>
                                 </form>
+
                                 @if (Model.IsGroupOwner)
                                 {
                                     <div class="mt-2">
                                         <label>Invitation Link:</label>
                                         <div class="input-group mt-2">
-                                            <!-- Generate the invitation URL based on the token stored in the database -->
                                             <input type="text"
                                                    class="form-control"
                                                    value="@($"{Request.Scheme}://{Request.Host}/Groups/JoinGroup?token={group.InvitationToken}")"
-                                                   readonly />  
+                                                   readonly />
                                             <button type="button" class="btn btn-secondary btn-sm" onclick="copyToClipboard(this)">
                                                 Copy Link
                                             </button>
-
                                         </div>
                                         <small class="text-muted">Share this link to invite users to the group.</small>
                                     </div>
@@ -64,7 +63,7 @@
                 {
                     <p>You have not created any groups yet.</p>
                 }
-@* 
+                @* 
                 @section Scripts {
                     <script>
                         function copyToClipboard(button) {

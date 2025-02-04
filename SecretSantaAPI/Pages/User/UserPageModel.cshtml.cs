@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Business;
 
 namespace SecretSantaAPI.Pages.User
 {
@@ -42,14 +43,16 @@ namespace SecretSantaAPI.Pages.User
         private readonly IRepository _repository;
         private readonly ILoggerAPI _loggerAPI;
         private readonly IConfiguration _configuration;
-        public UserPageModel(SecretSantaContext context, IRepository repository, ILoggerAPI loggerAPI, IConfiguration configuration)
+        private readonly SecretSantaService _secretSantaService;
+        public UserPageModel(SecretSantaContext context, IRepository repository, ILoggerAPI loggerAPI, IConfiguration configuration, SecretSantaService secretSantaService)
         {
             _context = context;
             _repository = repository;
             _loggerAPI = loggerAPI;
             _configuration = configuration;
+            _secretSantaService = secretSantaService;
         }
-        public int GroupId { get; set; }
+        public List<Group> Groups { get; set; }
         public bool IsGroupOwner { get; set; }
         public List<Group> ParticipatingGroups { get; set; } = new List<Group>();
         public List<Group> CreatedGroups { get; set; } = new List<Group>();
@@ -61,9 +64,11 @@ namespace SecretSantaAPI.Pages.User
         public string UserId { get; set; }
         public string Token { get; set; }
         public string Message { get; set; }
+
+        [BindProperty]
+        public string InvitationTokens { get; set; }
         public async Task OnGet()
         {
-
             if (!User.Identity.IsAuthenticated)
             {
                 RedirectToPage("/Account/Login");
@@ -73,12 +78,6 @@ namespace SecretSantaAPI.Pages.User
 
             // Extract user ID from claims
             string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"{claim.Type}: {claim.Value}");
-            }
-
             if (!int.TryParse(idClaim, out int userId))
             {
                 RedirectToPage("/Account/Login");
@@ -112,21 +111,21 @@ namespace SecretSantaAPI.Pages.User
                 };
             }
 
+            CreatedGroups = await _context.Groups
+                .Where(g => g.OwnerUserID == userId)
+                .ToListAsync() ?? new List<Group>();
 
-            // Retrieve groups where the user participates
+            InvitationTokens = CreatedGroups.FirstOrDefault()?.InvitationToken;
+
+            Console.WriteLine($"Selected Invitation Token: {InvitationTokens}");
+            Console.WriteLine($"Created groups count: {CreatedGroups.Count}");
+
             ParticipatingGroups = await _context.UserGroups
                 .Where(ug => ug.UserID == userId)
                 .Select(ug => ug.Groups)
                 .ToListAsync();
 
             Console.WriteLine($"Participating groups count: {ParticipatingGroups.Count}");
-
-            // Retrieve groups created by the user (if needed)
-            CreatedGroups = await _context.Groups
-                .Where(g => g.OwnerUserID == userId)
-                .ToListAsync();
-
-            Console.WriteLine($"Created groups count: {CreatedGroups.Count}");
 
             Console.WriteLine("Generated Links for Created Groups:");
             foreach (var group in CreatedGroups)
@@ -141,9 +140,12 @@ namespace SecretSantaAPI.Pages.User
                     Console.WriteLine($"Group: {group.GroupName}, No token available.");
                 }
             }
-            // Determine if the user is the owner of any group
-            IsGroupOwner = CreatedGroups.Count > 0;  // Use Count > 0 instead of Any()
+
+            IsGroupOwner = CreatedGroups.Count > 0;
+
+            Groups = CreatedGroups;
         }
+
 
 
         //public async Task<IActionResult> OnPostAddOwnerToUsersAsync(int groupId, int ownerId)
@@ -197,14 +199,17 @@ namespace SecretSantaAPI.Pages.User
             string? groupDescription,
             string? groupLocation,
             int minBudget,
-            int maxBudget)
+            int maxBudget,
+            int CreatedGroups,
+            Group group
+            )
         {
             if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToPage("/LoginPage/Login");
             }
 
-            // Get the logged-in user's ID from the JWT token claims
+            // Get the logged-in user's ID from the JWT token
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
             {
@@ -229,9 +234,9 @@ namespace SecretSantaAPI.Pages.User
             };
 
             _context.Groups.Add(newGroup);
-            await _context.SaveChangesAsync(); // Save to generate the GroupID
+            await _context.SaveChangesAsync(); 
 
-            // Generate a JWT token for the invitation link using the actual GroupID
+            // Generate a JWT token 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
@@ -239,21 +244,76 @@ namespace SecretSantaAPI.Pages.User
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-            new Claim("groupId", newGroup.GroupID.ToString()), // Use database-generated GroupID
-            new Claim("ownerId", userId.ToString()) // Owner ID
-        }),
-                Expires = DateTime.UtcNow.AddDays(7),
+            new Claim("groupId", newGroup.GroupID.ToString()),
+            new Claim("ownerId", userId.ToString()) 
+              }),
+                Expires = DateTime.UtcNow.AddYears(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            newGroup.InvitationToken = tokenHandler.WriteToken(token); // Assign the token to the group
+            newGroup.InvitationToken = tokenHandler.WriteToken(token);
 
-            // Update the group with the generated token
+         
             _context.Groups.Update(newGroup);
             await _context.SaveChangesAsync();
 
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAsync(string InvitationToken)
+        {
+            try
+            {
+                if (!User.Identity.IsAuthenticated)
+                {
+                    _loggerAPI.Warn("Unauthorized access attempt to start draw");
+                    return RedirectToPage("/Account/Login");
+                }
+
+                if (string.IsNullOrEmpty(InvitationToken))
+                {
+                    _loggerAPI.Warn("Token missing");
+                    return RedirectToPage();
+                }
+
+                // Get user ID from claims
+                
+                string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(idClaim, out int userId))
+                {
+                    _loggerAPI.Warn("Invalid user ID in claims");
+                    return RedirectToPage("/Account/Login");
+                }
+
+                Group group = await _context.Groups.FirstOrDefaultAsync(g => g.InvitationToken == InvitationToken);
+                if (group == null)
+                {
+                    _loggerAPI.Warn($"Group not found for token: {InvitationToken}");
+                    return RedirectToPage();
+                }
+
+                bool isOwner = await _context.Groups
+                .AnyAsync(g => g.OwnerUserID == userId);
+
+                if (!isOwner)
+                {
+                    _loggerAPI.Warn($"User {userId} is not the owner of the group {group.GroupID}");
+                    return RedirectToPage();
+                }
+
+                // Perform the Secret Santa draw
+                await _secretSantaService.PerformDrawAsync(InvitationToken);
+                _loggerAPI.Info($"Draw was done successfully for group {group.GroupID}");
+
+        
+                return RedirectToPage();
+            }
+            catch (Exception ex)
+            {
+                _loggerAPI.Error($"Error while performing the draw: {ex.Message}");
+                return Page();
+            }
         }
 
 

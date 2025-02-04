@@ -25,7 +25,6 @@ namespace Business
         {
             try
             {
-                // Retrieve the group using the token
                 var group = await _repository.GetGroupByTokenAsync(invitationToken);
                 if (group == null)
                 {
@@ -35,64 +34,65 @@ namespace Business
 
                 int groupId = group.GroupID;
 
-                // Fetch user-group mappings from the UserGroups table
                 var userGroups = await _repository.GetUserGroupAsync(groupId);
-                if (userGroups == null || userGroups.Count == 0)
-                {
-                    _loggerAPI.Warn($"No users found in group {groupId}.");
-                    throw new InvalidOperationException("No users found in this group.");
-                }
-
-                if (userGroups.Count() < 2)
+                if (userGroups == null || userGroups.Count < 2)
                 {
                     _loggerAPI.Warn($"Insufficient users in group {groupId} to perform the draw.");
                     throw new InvalidOperationException("A group must have at least 2 users for the draw.");
                 }
 
-                // Extract user IDs from the UserGroups table
-                var userIds = userGroups.Select(ug => ug.UserID).ToList();
+                // Fetch actual user details
+                var users = await _repository.GetUsersByIdAsync(userGroups.Select(ug => ug.UserID).ToList());
 
-                // Fetch actual user details using user IDs
-                var users = await _repository.GetUsersByIdAsync(userIds);
-
-                var receivers = new List<User>(users);
-                var random = new Random();
-
-                // Shuffle receivers list to ensure randomization
-                receivers = receivers.OrderBy(_ => random.Next()).ToList();
-
-                // Ensure no user is assigned to themselves
-                for (int i = 0; i < users.Count; i++)
+                if (users.Count < 2)
                 {
-                    while (users[i].Id == receivers[i].Id)
-                    {
-                        receivers = receivers.OrderBy(_ => random.Next()).ToList();
-                        i = -1; // Restart check from the beginning
-                    }
+                    _loggerAPI.Warn($"Not enough valid users for draw in group {groupId}.");
+                    throw new InvalidOperationException("A group must have at least 2 users for the draw.");
                 }
 
-                // Create the assignments (Santa -> Receiver)
-                var assignments = new List<GroupInfo>();
+                List<User> santa = new List<User>();
+                List<User> receiver = new List<User>();
+
+                Random random = new Random();
+
+                // Pairing logic
+                for (int i = users.Count; i > 0; i--)
+                {
+                    var notSantaUser = users.Where(x => !santa.Contains(x)).ToList();
+                    var notReceiverUser = users.Where(x => !receiver.Contains(x)).ToList();
+
+                    int randomSantaIndex = random.Next(notSantaUser.Count);
+                    int randomReceiverIndex = random.Next(notReceiverUser.Count);
+
+                    while (notSantaUser[randomSantaIndex] == notReceiverUser[randomReceiverIndex])
+                    {
+                        randomReceiverIndex = random.Next(notReceiverUser.Count);
+                    }
+
+                    santa.Add(notSantaUser[randomSantaIndex]);
+                    receiver.Add(notReceiverUser[randomReceiverIndex]);
+                }
+
+                // Save pairings to database
+                List<GroupInfo> assignments = new List<GroupInfo>();
+
                 for (int i = 0; i < users.Count; i++)
                 {
-                    var santa = users[i];
-                    var receiver = receivers[i];
-
                     assignments.Add(new GroupInfo
                     {
-                        UserGroupID = userGroups.First(ug => ug.UserID == santa.Id).UserGroupID,
-                        RecieverID = receiver.Id,
+                        UserGroupID = userGroups.First(ug => ug.UserID == santa[i].Id).UserGroupID,
+                        RecieverID = receiver[i].Id,
                         Whishlist = string.Empty
                     });
                 }
 
                 await _repository.SaveGroupInfoAsync(assignments);
 
-                _loggerAPI.Info($"Secret Santa draw completed for group {groupId}.");
+                _loggerAPI.Info($"Secret Santa draw completed successfully for group {groupId}.");
             }
             catch (Exception ex)
             {
-                _loggerAPI.Error( $"{ex}, An error occurred while performing the Secret Santa draw.");
+                _loggerAPI.Error($"{ex}, An error occurred while performing the Secret Santa draw.");
                 throw;
             }
         }

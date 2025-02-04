@@ -341,7 +341,6 @@ namespace DataAccess.Repositories
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
-            // Define token claims
             var claims = new[]
             {
             new Claim("groupId", groupId.ToString()),
@@ -362,16 +361,15 @@ namespace DataAccess.Repositories
         public async Task<Group> CreateGroupAsync(Group group)
         {
             _context.Groups.Add(group);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
 
-            // Generate and assign the invitation token
             group.InvitationToken = GenerateInvitationToken(group.GroupID);
+
             _context.Groups.Update(group);
             await _context.SaveChangesAsync();
 
             return group;
         }
-
 
 
         public async Task<int?> ValidateTokenAsync(string token)
