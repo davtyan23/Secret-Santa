@@ -24,7 +24,7 @@ public partial class SecretSantaContext : DbContext
 
     public virtual DbSet<UserPass> UserPasses { get; set; }
     public virtual DbSet<Group> Groups { get; set; }
-    public virtual DbSet<UserGroup> UsersGroups { get; set; }
+    public virtual DbSet<UserGroup> UserGroups { get; set; }
     public virtual DbSet<UserRole> UserRoles { get; set; }
     public virtual DbSet<GroupInfo> GroupsInfo { get; set; }
 

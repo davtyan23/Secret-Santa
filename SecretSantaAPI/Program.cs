@@ -101,7 +101,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ILoggerAPI, LoggerAPI>();
 builder.Services.AddOptions<SmtpOptions>().BindConfiguration(nameof(SmtpOptions));
-
+builder.Services.AddScoped<SecretSantaService>();
 // Register EmailSender as Singleton
 builder.Services.AddSingleton<EmailSender>();
 

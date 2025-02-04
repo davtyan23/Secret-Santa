@@ -2,9 +2,6 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Azure;
-
-//using System.Data.Entity;
 using DataAccess.Models;
 using DataAccess.UserViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -97,13 +94,16 @@ namespace DataAccess.Repositories
             var user = _context.Users.FindAsync(id);
             await _context.SaveChangesAsync();
         }
-
-        public async Task<User> GetUsersByIdAsync(int id)
+        public async Task<User> GetUserByIdAsync(int userId)
         {
-            var user = await _context.Users.FindAsync(id);
-            return user;
+            return await _context.Users
+                .FindAsync(userId);
         }
-
+        public Task<List<User>> GetUsersByIdAsync(List<int> userIds)
+        {
+            return _context.Users
+                                 .Where(u => userIds.Contains(u.Id)).ToListAsync();
+        }
         public async Task<string> GetRoleById(RoleIdEnum id)
         {
             var role = await _context.Roles.FindAsync(id);
@@ -242,7 +242,7 @@ namespace DataAccess.Repositories
 
         public async Task<List<Group>> GetGroupsAsync(int userId)
         {
-            return await _context.UsersGroups
+            return await _context.UserGroups
                 .Where(ug => ug.UserID == userId)
                 .Select(ug => ug.Groups)
                 .ToListAsync();
@@ -252,6 +252,13 @@ namespace DataAccess.Repositories
         {
             return await _context.Groups
                 .FirstOrDefaultAsync(g => g.GroupID == groupId);
+        }
+
+        public async Task<List<UserGroup>> GetUserGroupAsync(int groupId)
+        {
+            return await _context.UserGroups.
+                Where(ug => ug.GroupID == groupId).
+                ToListAsync();
         }
 
         public async Task<bool> AddUserToGroupAsync(int userId, int groupId)
@@ -270,7 +277,7 @@ namespace DataAccess.Repositories
             }
 
             // Check if the user is already in the group
-            var existingUserGroup = await _context.UsersGroups
+            var existingUserGroup = await _context.UserGroups
                 .FirstOrDefaultAsync(ug => ug.UserID == userId && ug.GroupID == groupId);
             if (existingUserGroup != null)
             {
@@ -284,7 +291,7 @@ namespace DataAccess.Repositories
                 GroupID = groupId
             };
 
-            await _context.UsersGroups.AddAsync(userGroup);
+            await _context.UserGroups.AddAsync(userGroup);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -334,7 +341,6 @@ namespace DataAccess.Repositories
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
-            // Define token claims
             var claims = new[]
             {
             new Claim("groupId", groupId.ToString()),
@@ -355,16 +361,15 @@ namespace DataAccess.Repositories
         public async Task<Group> CreateGroupAsync(Group group)
         {
             _context.Groups.Add(group);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
 
-            // Generate and assign the invitation token
             group.InvitationToken = GenerateInvitationToken(group.GroupID);
+
             _context.Groups.Update(group);
             await _context.SaveChangesAsync();
 
             return group;
         }
-
 
 
         public async Task<int?> ValidateTokenAsync(string token)
@@ -405,6 +410,12 @@ namespace DataAccess.Repositories
             }
 
             return null;
+        }
+
+        public async Task SaveGroupInfoAsync(List<GroupInfo> groupInfos)
+        {
+            await _context.GroupsInfo.AddRangeAsync(groupInfos);
+            await _context.SaveChangesAsync();
         }
 
 

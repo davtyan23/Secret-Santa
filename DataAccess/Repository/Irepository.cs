@@ -12,7 +12,8 @@ namespace DataAccess.Repositories
         Task UpdateUserAsync(User user);
         Task DeactivateUserAsync(int id);
         Task<List<User>> GetActiveUsersAsync(int limit, int offset);
-        Task<User> GetUsersByIdAsync(int id);
+        Task<List<User>> GetUsersByIdAsync(List<int> userIds);
+        Task<User> GetUserByIdAsync(int userId);
         Task<User> GetUserByEmailAsync(string email);
         Task<UserPass> GetUserPassByEmailAsync(string email);
         Task<AssignedRole> GetRoleByUserIdAsync(int userId);
@@ -26,8 +27,12 @@ namespace DataAccess.Repositories
         Task<bool> AddUserToGroupAsync(int userId, int groupId);
         Task<int?> ValidateTokenAsync(string token);
         Task<Group?> GetGroupByTokenAsync(string invitationToken);
+        Task<List<Group>> GetGroupsAsync(int userId); // all groups
+        Task<Group> GetGroupByIdAsync(int groupId);
+        Task<List<UserGroup>> GetUserGroupAsync(int groupId);
         string GenerateInvitationToken(int groupId);
         Task<Group> CreateGroupAsync(Group group);
+        Task SaveGroupInfoAsync(List<GroupInfo> groupInfos);
 
     }
 }
