@@ -57,43 +57,36 @@ public partial class SecretSantaContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            // Set the primary key
             entity.HasKey(e => e.Id)
                   .HasName("PK__Users__3214EC27A8DFC82C"); // Matches your database's PK name
 
-            // Configure the ID column
             entity.Property(e => e.Id)
-                  .HasColumnName("ID") // Match database column name
-                  .ValueGeneratedOnAdd(); // Auto-incrementing
+                  .HasColumnName("ID") 
+                  .ValueGeneratedOnAdd(); 
 
-            // Configure the Firstname column
             entity.Property(e => e.FirstName)
-                  .HasColumnName("Firstname") // Match database column name
+                  .HasColumnName("Firstname")
                   .HasMaxLength(30)
                   .IsRequired();
 
-            // Configure the Lastname column
             entity.Property(e => e.LastName)
-                  .HasColumnName("Lastname") // Match database column name
+                  .HasColumnName("Lastname")  
                   .HasMaxLength(30)
                   .IsRequired();
 
-            // Configure the PhoneNumber column
             entity.Property(e => e.PhoneNumber)
-                  .HasColumnName("PhoneNumber") // Match database column name
+                  .HasColumnName("PhoneNumber") 
                   .HasMaxLength(15)
                   .IsRequired();
 
-            // Configure the IsActive column
             entity.Property(e => e.IsActive)
-                  .HasColumnName("IsActive") // Match database column name
-                  .HasDefaultValue(true) // Default value matches SQL DEFAULT constraint
+                  .HasColumnName("IsActive") 
+                  .HasDefaultValue(true) 
                   .IsRequired();
 
-            // Configure the RegisterTime column
             entity.Property(e => e.RegisterTime)
-                  .HasColumnName("RegisterTime") // Match database column name
-                  .HasColumnType("datetime"); // Match database type
+                  .HasColumnName("RegisterTime") 
+                  .HasColumnType("datetime");  
 
             // Map to the Users table
             entity.ToTable("Users");
@@ -173,9 +166,9 @@ public partial class SecretSantaContext : DbContext
                   ) 
                   .HasConstraintName("FK_GroupInfo_UserGroup");
 
-            entity.HasOne(e => e.Reciever)
+            entity.HasOne(e => e.Receiver)
                   .WithMany() 
-                  .HasForeignKey(e => e.RecieverID)
+                  .HasForeignKey(e => e.ReceiverID)
                   .OnDelete(DeleteBehavior.Restrict)                  
                   .HasConstraintName("FK_GroupInfo_Receiver");
         });
