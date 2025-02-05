@@ -97,6 +97,20 @@
                                 <p>@group.GroupDescription</p>
                                 <p><strong>Location:</strong> @group.GroupLocation</p>
                                 <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
+                                <p>
+                                    <strong>Receiver's Name:</strong>
+                                    @{
+                                        var receiver = Model.groupInfos?.FirstOrDefault(gi => gi.GroupInfoID == group.GroupID);
+                                        if (receiver != null)
+                                        {
+                                            <span>@receiver.ReceiverFirstName @receiver.ReceiverLastName</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Not Assigned</span>
+                                        }
+                                    }
+                                </p>
                             </li>
                         }
                     </ul>

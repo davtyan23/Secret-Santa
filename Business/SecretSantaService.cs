@@ -81,7 +81,7 @@ namespace Business
                     assignments.Add(new GroupInfo
                     {
                         UserGroupID = userGroups.First(ug => ug.UserID == santa[i].Id).UserGroupID,
-                        RecieverID = receiver[i].Id,
+                        ReceiverID = receiver[i].Id,
                         Whishlist = string.Empty
                     });
                 }

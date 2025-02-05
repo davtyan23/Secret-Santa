@@ -1,16 +1,10 @@
 using DataAccess.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using DataAccess.UserViewModels;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using DataAccess.Repositories;
 using DataAccess;
-using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -84,6 +78,19 @@ namespace SecretSantaAPI.Pages.User
                 return;
             }
 
+            groupInfos = await (from gi in _context.GroupsInfo
+                                join u in _context.Users on gi.ReceiverID equals u.Id
+                                select new GroupInfoViewModel
+                                {
+                                    GroupInfoID = gi.GroupInfoID,
+                                    UserGroupID = gi.UserGroupID,
+                                    ReceiverID = gi.ReceiverID,
+                                    ReceiverFirstName = u.FirstName,
+                                    ReceiverLastName = u.LastName
+                                }).ToListAsync();
+
+            Console.WriteLine($"Populated groupInfos with {groupInfos.Count} records.");
+
             // Retrieve user information
             var userInfo = await _context.Users
                 .Where(u => u.Id == userId)
@@ -145,54 +152,6 @@ namespace SecretSantaAPI.Pages.User
 
             Groups = CreatedGroups;
         }
-
-
-
-        //public async Task<IActionResult> OnPostAddOwnerToUsersAsync(int groupId, int ownerId)
-        //{
-        //    try
-        //    {
-        //        var group = await _context.Groups.FindAsync(groupId);
-        //        if (group == null)
-        //        {
-        //            _loggerAPI.Error($"Group with ID {groupId} not found."); // Log error
-        //            ModelState.AddModelError(string.Empty, "Group not found."); // Add error for UI
-        //            return Page();
-        //        }
-
-        //        // Logic to add the owner to participants...
-        //        var owner = await _context.Users.FindAsync(ownerId);
-        //        if (owner == null)
-        //        {
-        //            _loggerAPI.Error($"User with ID {ownerId} not found.");
-        //            ModelState.AddModelError(string.Empty, "Owner not found.");
-        //            return Page();
-        //        }
-
-        //        if (!_context.GroupParticipants.Any(gp => gp.GroupId == groupId && gp.UserId == ownerId))
-        //        {
-        //            _context.GroupParticipants.Add(new GroupParticipant
-        //            {
-        //                GroupId = groupId,
-        //                UserId = ownerId
-        //            });
-        //            await _context.SaveChangesAsync();
-        //            _loggerAPI.Info($"Owner with ID {ownerId} added to group {group.GroupName} successfully.");
-        //        }
-        //        else
-        //        {
-        //            ModelState.AddModelError(string.Empty, "Owner is already a participant.");
-        //        }
-
-        //        return RedirectToPage(); // Refresh the current page
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _loggerAPI.Error($"An error occurred: {ex.Message}"); // Log exception
-        //        ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again."); // Inform user
-        //        return Page();
-        //    }
-        //}
 
         public async Task<IActionResult> OnPostAddGroupAsync(
             string groupName,
@@ -261,7 +220,18 @@ namespace SecretSantaAPI.Pages.User
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostAsync(string InvitationToken)
+        public class GroupInfoViewModel
+        {
+            public int GroupInfoID { get; set; }
+            public int UserGroupID { get; set; }
+            public int ReceiverID { get; set; }
+            public string ReceiverFirstName { get; set; }
+            public string ReceiverLastName { get; set; }
+        }
+
+        public List<GroupInfoViewModel> groupInfos { get; set; }
+
+        public async Task<IActionResult> OnPostAsync(string InvitationToken, int ReceiverId)
         {
             try
             {
@@ -278,7 +248,6 @@ namespace SecretSantaAPI.Pages.User
                 }
 
                 // Get user ID from claims
-                
                 string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(idClaim, out int userId))
                 {
@@ -306,7 +275,18 @@ namespace SecretSantaAPI.Pages.User
                 await _secretSantaService.PerformDrawAsync(InvitationToken);
                 _loggerAPI.Info($"Draw was done successfully for group {group.GroupID}");
 
-        
+                // Populate groupInfos
+                groupInfos = await (from gi in _context.GroupsInfo
+                                    join u in _context.Users on gi.ReceiverID equals u.Id
+                                    select new GroupInfoViewModel
+                                    {
+                                        GroupInfoID = gi.GroupInfoID,
+                                        UserGroupID = gi.UserGroupID,
+                                        ReceiverID = gi.ReceiverID,
+                                        ReceiverFirstName = u.FirstName,
+                                        ReceiverLastName = u.LastName
+                                    }).ToListAsync();
+
                 return RedirectToPage();
             }
             catch (Exception ex)
@@ -315,7 +295,6 @@ namespace SecretSantaAPI.Pages.User
                 return Page();
             }
         }
-
 
     }
 }
