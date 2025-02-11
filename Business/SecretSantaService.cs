@@ -41,6 +41,10 @@ namespace Business
                     throw new InvalidOperationException("A group must have at least 2 users for the draw.");
                 }
 
+                if (group.IsDrawn == true)
+                {
+                    throw new InvalidOperationException("The draw has already been performed for this group.");
+                }
                 // Fetch actual user details
                 var users = await _repository.GetUsersByIdAsync(userGroups.Select(ug => ug.UserID).ToList());
 
@@ -85,7 +89,7 @@ namespace Business
                         Whishlist = string.Empty
                     });
                 }
-
+                group.IsDrawn = true;
                 await _repository.SaveGroupInfoAsync(assignments);
 
                 _loggerAPI.Info($"Secret Santa draw completed successfully for group {groupId}.");

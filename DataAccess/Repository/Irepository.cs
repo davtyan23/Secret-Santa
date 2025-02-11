@@ -34,5 +34,7 @@ namespace DataAccess.Repositories
         Task<Group> CreateGroupAsync(Group group);
         Task SaveGroupInfoAsync(List<GroupInfo> groupInfos);
 
+        bool? IsDrawn(int groupId);
+
     }
 }

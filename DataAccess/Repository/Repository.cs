@@ -418,7 +418,15 @@ namespace DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-
+        public bool? IsDrawn(int groupId)
+        {
+            var group = _context.Groups.FirstOrDefault(g => g.GroupID == groupId);
+            if(group == null)
+            {
+                throw new Exception("Group not found");
+            }
+            return group.IsDrawn;
+        }
         /* public async Task<string> GetGroupLinkAsync(Group group)
          {
              if (string.IsNullOrEmpty(group.InvitationToken))

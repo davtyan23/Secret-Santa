@@ -16,6 +16,7 @@ namespace DataAccess.Models
         public int MinBudget { get; set; }
         public int MaxBudget { get; set; }
         public string? InvitationToken {  get; set; }
+        public bool? IsDrawn {  get; set; } = false;
         public ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
     }
 }
