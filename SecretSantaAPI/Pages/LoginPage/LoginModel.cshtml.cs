@@ -146,7 +146,7 @@ namespace SecretSantaAPI.Pages.LoginPage
 
             var userPass = await _authService.SignInAsync(new LoginRequestDTO
             {
-                Email = Input.Email,
+                 Email = Input.Email,
                 Password = Input.Password
             });
 

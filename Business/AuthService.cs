@@ -1,4 +1,5 @@
 using Azure.Core;
+using Business.DTOs;
 using Business.DTOs.Request;
 using DataAccess;
 using DataAccess.Models;
@@ -126,20 +127,19 @@ namespace Business
         }
         //ste tema ka
 
-        public async Task<UserPass> SignInAsync(LoginRequestDTO login)
+        public async Task<LoginResponseDTO> SignInAsync(LoginRequestDTO login)
         {
-
             // Validate input
             if (login == null || string.IsNullOrEmpty(login.Email) || string.IsNullOrEmpty(login.Password))
             {
-                throw new ArgumentException("Invalid login details.");
+                return new LoginResponseDTO { IsSuccess = false, ErrorMsg = "Invalid login details." };
             }
 
             // Retrieve user based on email
             User user = await _repository.GetUserByEmailAsync(login.Email);
             if (user == null || !user.IsActive)
             {
-                throw new UnauthorizedAccessException("User not found or inactive.");
+                return new LoginResponseDTO { IsSuccess = false, ErrorMsg = "User credentials not found." };
             }
 
             user.UserPass = await _repository.GetUserPassByEmailAsync(login.Email);
@@ -154,7 +154,8 @@ namespace Business
             bool isPasswordValid = VerifyPass(login.Password, user.UserPass.PassHash);
             if (!isPasswordValid)
             {
-                throw new UnauthorizedAccessException("Invalid credentials.");
+                
+                return new LoginResponseDTO { IsSuccess = false, ErrorMsg = "Invalid email or password." };
             }
 
             var claims = new[]
@@ -164,8 +165,18 @@ namespace Business
 
             await _repository.UpdateUserAsync(user);
 
+            var userPassDto = new UserPassDto
+            {
+                Email = user.UserPass.Email,
+                PassHash = user.UserPass.PassHash
+            };
             // Return the UserPass objects
-            return user.UserPass;
+            return new LoginResponseDTO
+            {
+                IsSuccess = true,
+                UserId = user.Id,
+                UserPass = userPassDto
+            };
         }
 
 
