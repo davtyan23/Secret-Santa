@@ -89,28 +89,12 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const togglePassword = document.getElementById("togglePassword");
-            const passwordInput = document.getElementById("Password");
             const loginForm = document.querySelector("form");
             const errorMessage = document.getElementById("error-message");
 
-            if (togglePassword && passwordInput) {
-                togglePassword.addEventListener("click", function () {
-                    if (passwordInput.type === "password") {
-                        passwordInput.type = "text";
-                        this.classList.remove("fa-eye");
-                        this.classList.add("fa-eye-slash");
-                    } else {
-                        passwordInput.type = "password";
-                        this.classList.remove("fa-eye-slash");
-                        this.classList.add("fa-eye");
-                    }
-                });
-            }
-
             if (loginForm) {
                 loginForm.addEventListener("submit", async function (event) {
-                    event.preventDefault(); // Prevent form from submitting normally
+                    event.preventDefault(); // Prevent default form submission
 
                     // Get user input values
                     const email = document.getElementById("Email").value;
@@ -127,30 +111,37 @@
                         return;
                     }
 
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
                     try {
-                        const response = await fetch("/api/login", {
+                        const response = await fetch("/LoginPage/Login", {
                             method: "POST",
-                            headers: { "Content-Type": "application/json" },
+                            headers: {
+                                "Content-Type": "application/json",
+                                "RequestVerificationToken": token
+                            },
                             body: JSON.stringify({ Email: email, Password: password })
                         });
 
                         const result = await response.json();
 
-                        if (result.IsSuccess) {
-                            window.location.href = "/dashboard";
+                        console.log(result);
+
+                        if (result.isSuccess) {
+                            console.log("hors arev");
+                            window.location.href = "/User/UserPageModel";
                         } else {
-                            // If login fails, display the error message
                             errorMessage.textContent = result.ErrorMsg || "Invalid email or password.";
                             errorMessage.style.display = "block";
                         }
                     } catch (error) {
-                        // Handle unexpected errors (e.g., network issues)
                         errorMessage.textContent = "An error occurred. Please try again.";
                         errorMessage.style.display = "block";
                     }
                 });
             }
         });
+
 
     </script>
 

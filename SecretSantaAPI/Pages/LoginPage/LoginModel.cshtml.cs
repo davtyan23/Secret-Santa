@@ -99,27 +99,25 @@ namespace SecretSantaAPI.Pages.LoginPage
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (string.IsNullOrEmpty(Input.Email) || string.IsNullOrEmpty(Input.Password))
+            var input = await Request.ReadFromJsonAsync<InputModel>();
+            if (input == null || string.IsNullOrEmpty(input.Email) || string.IsNullOrEmpty(input.Password))
             {
-                ModelState.AddModelError(string.Empty, "Email and Input.Password are required.");
-                return Page();
+                return new JsonResult(new { IsSuccess = false, ErrorMsg = "Email and password are required." });
             }
 
-            // Authenticate the user
-            var user = await _userService.AuthenticateAsync(Input.Email, Input.Password);
+            // Authenticate the user using the input
+            var user = await _userService.AuthenticateAsync(input.Email, input.Password);
             if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                return Page();
+                return new JsonResult(new { IsSuccess = false, ErrorMsg = "Invalid login attempt." });
             }
 
-            // Create claims
+            // Create claims, sign in, etc.
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.FirstName),
                 new Claim(ClaimTypes.Email, user.UserPass.Email),
-               // new Claim(ClaimTypes.Role, user.AssignedRoles.First().RoleId.ToString()) // Add role claim for authorization
             };
 
             foreach (var role in user.AssignedRoles)
@@ -127,16 +125,14 @@ namespace SecretSantaAPI.Pages.LoginPage
                 claims.Add(new Claim(ClaimTypes.Role, role.RoleId.ToString()));
             }
 
-            // Create claims identity and principal
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-            // Sign in the user
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
-            // Redirect to the home page or specified return URL
-            return RedirectToPage("/User/UserPageModel", new { token = "token", userId = user.Id, message = "Login successful" });
+            return new JsonResult(new { IsSuccess = true, RedirectUrl = "/User/UserPageModel?token=token&userId=" + user.Id + "&message=Login successful" });
         }
+
+
         public async Task<IActionResult> OnPostAsync2()
         {
             if (!ModelState.IsValid)
