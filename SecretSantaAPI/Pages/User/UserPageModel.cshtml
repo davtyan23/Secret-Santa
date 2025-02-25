@@ -1,8 +1,6 @@
 ﻿@page
 @model SecretSantaAPI.Pages.User.UserPageModel
 @{
-    ViewData["Title"] = "User Page";
-    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -140,6 +138,16 @@
                 <h3>Secret Santa Groups</h3>
                 @if (Model.CreatedGroups.Any())
                 {
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <p>@error.ErrorMessage</p>
+                            }
+                        </div>
+                    }
+
                     <ul class="list-group">
                         @foreach (var group in Model.CreatedGroups)
                         {
@@ -151,6 +159,7 @@
 
                                 <form method="post">
                                     <input type="hidden" name="InvitationToken" value="@group.InvitationToken" />
+                                    <input type="hidden" name="UserId" value="@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
                                     <button type="submit" class="btn btn-primary">Start Draw</button>
                                 </form>
 
@@ -173,6 +182,7 @@
                             </li>
                         }
                     </ul>
+
                 }
                 else
                 {

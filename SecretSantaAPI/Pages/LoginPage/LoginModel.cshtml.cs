@@ -52,7 +52,7 @@ namespace SecretSantaAPI.Pages.LoginPage
         public UserViewModel UserViewModel { get; set; } = new UserViewModel();
 
         [BindProperty(SupportsGet = true)]
-        public string UserId { get; set; }
+        public int UserId { get; set; }
 
         public string Token { get; set; }
         public string Message { get; set; }
@@ -112,7 +112,6 @@ namespace SecretSantaAPI.Pages.LoginPage
                 return new JsonResult(new { IsSuccess = false, ErrorMsg = "Invalid login attempt." });
             }
 
-            // Create claims, sign in, etc.
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

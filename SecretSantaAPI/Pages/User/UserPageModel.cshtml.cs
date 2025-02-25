@@ -55,7 +55,7 @@ namespace SecretSantaAPI.Pages.User
         public UserViewModel UserViewModel { get; set; } = new UserViewModel();
 
         [BindProperty(SupportsGet = true)]
-        public string UserId { get; set; }
+        public int? UserId { get; set; }
         public string Token { get; set; }
         public string Message { get; set; }
 
@@ -69,6 +69,9 @@ namespace SecretSantaAPI.Pages.User
                 Console.WriteLine("No auth?");
                 return;
             }
+
+            var claims = User.Claims.Select(c => $"{c.Type}: {c.Value}").ToList();
+            _loggerAPI.Info($"User claims: {string.Join(", ", claims)}");
 
             // Extract user ID from claims
             string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -231,7 +234,7 @@ namespace SecretSantaAPI.Pages.User
 
         public List<GroupInfoViewModel> groupInfos { get; set; }
 
-        public async Task<IActionResult> OnPostAsync(string InvitationToken, int ReceiverId)
+        public async Task<IActionResult> OnPostAsync(string InvitationToken, int? ReceiverId)
         {
             try
             {
@@ -262,6 +265,18 @@ namespace SecretSantaAPI.Pages.User
                     return RedirectToPage();
                 }
 
+                if (!ModelState.IsValid)
+                {
+                    foreach (var error in ModelState)
+                    {
+                        foreach (var err in error.Value.Errors)
+                        {
+                            _loggerAPI.Warn($"ModelState error - Key: {error.Key}, Message: {err.ErrorMessage}");
+                        }
+                    }
+                    return Page();
+                }
+
                 bool isOwner = await _context.Groups
                 .AnyAsync(g => g.OwnerUserID == userId);
 
@@ -271,6 +286,14 @@ namespace SecretSantaAPI.Pages.User
                     return RedirectToPage();
                 }
 
+                int participantsCount = await _context.UserGroups.CountAsync(ug => ug.GroupID == group.GroupID);
+
+                if (participantsCount < 3) 
+                {
+                    _loggerAPI.Warn($"Not enough particpants in this group {group.GroupID} to perform the draw");
+                    ModelState.AddModelError(string.Empty, "There must be at least 3 participants to perform the draw.");
+                    return Page();
+                }
                 // Perform the Secret Santa draw
                 await _secretSantaService.PerformDrawAsync(InvitationToken);
                 _loggerAPI.Info($"Draw was done successfully for group {group.GroupID}");
