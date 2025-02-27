@@ -371,7 +371,7 @@ namespace DataAccess.Repositories
             return group;
         }
 
-
+        
         public async Task<int?> ValidateTokenAsync(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
