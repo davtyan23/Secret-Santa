@@ -234,6 +234,31 @@ namespace SecretSantaAPI.Pages.User
 
         public List<GroupInfoViewModel> groupInfos { get; set; }
 
+        [IgnoreAntiforgeryToken]
+        public JsonResult OnPostStartDraw(string invitationToken)
+        {
+            var group = _context.Groups.FirstOrDefault(g => g.InvitationToken == invitationToken);
+
+            if (group == null)
+            {
+                return new JsonResult(new { success = false, message = "Group not found." });
+            }
+
+            var participants = _context.UserGroups
+                .Where(ug => ug.GroupID == group.GroupID)
+                .Select(ug => ug.UserID)
+                .ToList();
+
+            if (participants.Count < 3)
+            {
+                return new JsonResult(new { success = false, message = "Not enough participants to start the draw." });
+            }
+
+            return new JsonResult(new { success = true, message = "Draw successfully started!" });
+        }
+
+
+
         public async Task<IActionResult> OnPostAsync(string InvitationToken, int? ReceiverId)
         {
             try
@@ -288,12 +313,16 @@ namespace SecretSantaAPI.Pages.User
 
                 int participantsCount = await _context.UserGroups.CountAsync(ug => ug.GroupID == group.GroupID);
 
-                if (participantsCount < 3) 
+                if (participantsCount < 3)
                 {
-                    _loggerAPI.Warn($"Not enough particpants in this group {group.GroupID} to perform the draw");
-                    ModelState.AddModelError(string.Empty, "There must be at least 3 participants to perform the draw.");
-                    return Page();
+                    _loggerAPI.Warn($"Not enough participants in this group {group.GroupID} to perform the draw");
+
+                    // Store the warning message
+                    TempData["DrawWarning"] = "There must be at least 3 participants to perform the draw.";
+
+                    return Page(); // Stay on the page and show the warning
                 }
+
                 // Perform the Secret Santa draw
                 await _secretSantaService.PerformDrawAsync(InvitationToken);
                 _loggerAPI.Info($"Draw was done successfully for group {group.GroupID}");

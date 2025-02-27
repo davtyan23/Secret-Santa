@@ -131,7 +131,6 @@ namespace SecretSantaAPI.Pages.LoginPage
             return new JsonResult(new { IsSuccess = true, RedirectUrl = "/User/UserPageModel?token=token&userId=" + user.Id + "&message=Login successful" });
         }
 
-
         public async Task<IActionResult> OnPostAsync2()
         {
             if (!ModelState.IsValid)
