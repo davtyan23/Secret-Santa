@@ -412,10 +412,15 @@ namespace DataAccess.Repositories
             return null;
         }
 
-        public async Task SaveGroupInfoAsync(List<GroupInfo> groupInfos)
+        public async Task SaveGroupInfoAsync(List<GroupInfo> assignments)
         {
-            await _context.GroupsInfo.AddRangeAsync(groupInfos);
+            _context.GroupsInfo.AddRange(assignments);
             await _context.SaveChangesAsync();
+        }
+        public async Task SaveGroupAsync(Group group)
+        {
+            _context.Groups.Update(group); 
+            await _context.SaveChangesAsync(); 
         }
 
         public bool? IsDrawn(int groupId)

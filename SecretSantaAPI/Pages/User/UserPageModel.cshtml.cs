@@ -235,43 +235,21 @@ namespace SecretSantaAPI.Pages.User
         public List<GroupInfoViewModel> groupInfos { get; set; }
 
         [IgnoreAntiforgeryToken]
-        public JsonResult OnPostStartDraw(string invitationToken)
+        public async Task<IActionResult> OnPostAsync(string invitationToken)
         {
-            var group = _context.Groups.FirstOrDefault(g => g.InvitationToken == invitationToken);
+            _loggerAPI.Info("OnPostAsync method is being called.");
 
-            if (group == null)
-            {
-                return new JsonResult(new { success = false, message = "Group not found." });
-            }
-
-            var participants = _context.UserGroups
-                .Where(ug => ug.GroupID == group.GroupID)
-                .Select(ug => ug.UserID)
-                .ToList();
-
-            if (participants.Count < 3)
-            {
-                return new JsonResult(new { success = false, message = "Not enough participants to start the draw." });
-            }
-
-            return new JsonResult(new { success = true, message = "Draw successfully started!" });
-        }
-
-
-
-        public async Task<IActionResult> OnPostAsync(string InvitationToken, int? ReceiverId)
-        {
             try
             {
                 if (!User.Identity.IsAuthenticated)
                 {
-                    _loggerAPI.Warn("Unauthorized access attempt to start draw");
+                    _loggerAPI.Warn("Unauthorized access attempt to start draw.");
                     return RedirectToPage("/Account/Login");
                 }
 
-                if (string.IsNullOrEmpty(InvitationToken))
+                if (string.IsNullOrEmpty(invitationToken))
                 {
-                    _loggerAPI.Warn("Token missing");
+                    _loggerAPI.Warn("Invitation token is missing.");
                     return RedirectToPage();
                 }
 
@@ -279,67 +257,45 @@ namespace SecretSantaAPI.Pages.User
                 string idClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(idClaim, out int userId))
                 {
-                    _loggerAPI.Warn("Invalid user ID in claims");
+                    _loggerAPI.Warn("Invalid user ID in claims.");
                     return RedirectToPage("/Account/Login");
                 }
 
-                Group group = await _context.Groups.FirstOrDefaultAsync(g => g.InvitationToken == InvitationToken);
+                var group = await _repository.GetGroupByTokenAsync(invitationToken);
                 if (group == null)
                 {
-                    _loggerAPI.Warn($"Group not found for token: {InvitationToken}");
-                    return RedirectToPage();
+                    _loggerAPI.Warn($"Group not found for token: {invitationToken}");
+                    return RedirectToPage("/Error", new { errorCode = "GroupNotFound"});
                 }
 
-                if (!ModelState.IsValid)
-                {
-                    foreach (var error in ModelState)
-                    {
-                        foreach (var err in error.Value.Errors)
-                        {
-                            _loggerAPI.Warn($"ModelState error - Key: {error.Key}, Message: {err.ErrorMessage}");
-                        }
-                    }
-                    return Page();
-                }
-
-                bool isOwner = await _context.Groups
-                .AnyAsync(g => g.OwnerUserID == userId);
-
+                bool isOwner = group.OwnerUserID == userId;
                 if (!isOwner)
                 {
                     _loggerAPI.Warn($"User {userId} is not the owner of the group {group.GroupID}");
                     return RedirectToPage();
                 }
 
-                int participantsCount = await _context.UserGroups.CountAsync(ug => ug.GroupID == group.GroupID);
-
+                int participantsCount = (await _repository.GetUserGroupAsync(group.GroupID)).Count;
                 if (participantsCount < 3)
                 {
-                    _loggerAPI.Warn($"Not enough participants in this group {group.GroupID} to perform the draw");
+                    _loggerAPI.Warn($"Not enough participants (only {participantsCount}) in group {group.GroupID} to perform the draw.");
 
-                    // Store the warning message
                     TempData["DrawWarning"] = "There must be at least 3 participants to perform the draw.";
-
-                    return Page(); // Stay on the page and show the warning
+                    return Page();
                 }
 
+                bool? isDrawn = group.IsDrawn;
+                if(isDrawn == true)
+                {
+                    _loggerAPI.Warn("the draw has been already performed");
+                    TempData["DrawWarning"] = "The draw is already performed";
+                    return Page();
+                }
                 // Perform the Secret Santa draw
-                await _secretSantaService.PerformDrawAsync(InvitationToken);
+                await _secretSantaService.PerformDrawAsync(invitationToken);
                 _loggerAPI.Info($"Draw was done successfully for group {group.GroupID}");
 
-                // Populate groupInfos
-                groupInfos = await (from gi in _context.GroupsInfo
-                                    join u in _context.Users on gi.ReceiverID equals u.Id
-                                    select new GroupInfoViewModel
-                                    {
-                                        GroupInfoID = gi.GroupInfoID,
-                                        UserGroupID = gi.UserGroupID,
-                                        ReceiverID = gi.ReceiverID,
-                                        ReceiverFirstName = u.FirstName,
-                                        ReceiverLastName = u.LastName
-                                    }).ToListAsync();
-
-                return RedirectToPage();
+                return Page();
             }
             catch (Exception ex)
             {
@@ -347,6 +303,5 @@ namespace SecretSantaAPI.Pages.User
                 return Page();
             }
         }
-
     }
 }

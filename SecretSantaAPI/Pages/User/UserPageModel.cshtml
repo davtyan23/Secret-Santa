@@ -1,6 +1,8 @@
 ﻿@page
 @model SecretSantaAPI.Pages.User.UserPageModel
 @{
+    ViewData["Title"] = "User Page";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
     <style>
-        
+
         body {
             background-color: rgb(212, 0, 36) !important; /* Dark Green */
             color: white;
@@ -27,10 +29,12 @@
             color: red !important;
             font-weight: bold;
         }
-        .textarea{
+
+        .textarea {
             color: white !important;
             background-color: black !important;
         }
+
         .container {
             flex: 1;
             background-color: rgb(44, 88, 64); /* Forest Green */
@@ -46,7 +50,7 @@
             border: 1px solid #FFD700;
         }
 
-      
+
         .btn-primary {
             background-color: #FFD700 !important; /* Gold */
             border-color: #bba520;
@@ -78,8 +82,8 @@
         }
 
         tr:nth-child(even) {
-            background-color:red; 
-            color: black; 
+            background-color: red;
+            color: black;
         }
 
         tr:nth-child(odd) {
@@ -107,20 +111,20 @@
             color: #ddd;
         }
 
-        .form-lable{
-            background-color:red !important;
+        .form-lable {
+            background-color: red !important;
         }
 
         form .form-label {
             color: black !important;
         }
 
-        .row mt-4{
+        .row mt-4 {
             background-color: red !important;
         }
 
-        .mb-3.textarea{
-            background-color:red !important;
+        .mb-3.textarea {
+            background-color: red !important;
         }
 
         .alert {
@@ -155,11 +159,11 @@
 
                     @if (TempData["DrawWarning"] != null)
                     {
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <div class="alert alert-warning">
                             @TempData["DrawWarning"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     }
+
                     @if (TempData["DrawSuccess"] != null)
                     {
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -192,15 +196,13 @@
                                 <p><strong>Location:</strong> @group.GroupLocation</p>
                                 <p><strong>Budget:</strong> @group.MinBudget - @group.MaxBudget</p>
 
-                                <form class="start-draw-form" data-invitation="@group.InvitationToken">
-                                    @Html.AntiForgeryToken()
-                                    <button type="button" class="start-draw-btn btn btn-primary">Start Draw</button>
+                                <form method="post" asp-page-handler="StartDraw" class="start-draw-form" asp-antiforgery="true"
+                                      asp-route-invitationToken="@group.InvitationToken" novalidate>
+
+                                    <button type="submit" class="btn btn-primary start-draw-btn">Start Draw</button>
                                     <div id="draw-message-@group.InvitationToken" class="mt-2"></div>
                                 </form>
 
-
-
-                                <div id="draw-message-@group.InvitationToken" class="mt-2"></div>
 
                                 @if (Model.IsGroupOwner)
                                 {
@@ -247,10 +249,10 @@
                                 <p>
                                     <strong>Receiver's Name:</strong>
                                     @{
-                                        var receiver = Model.groupInfos?.FirstOrDefault(gi => gi.GroupInfoID == group.GroupID);
-                                        if (receiver != null)
+                                        var sender = Model.groupInfos?.FirstOrDefault(gi => gi.UserGroupID == group.GroupID);
+                                        if (sender != null)
                                         {
-                                            <span>@receiver.ReceiverFirstName @receiver.ReceiverLastName</span>
+                                            <span>@sender.ReceiverFirstName @sender.ReceiverLastName</span>
                                         }
                                         else
                                         {
@@ -279,11 +281,7 @@
                         <input type="text" class="form-control" id="GroupName" name="groupName" required />
                     </div>
                     <div class="mb-3">
-                        <style>
-                            .mb-3{
-
-                            }
-                        </style>
+                        
                         <label for="GroupDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="GroupDescription" name="groupDescription"></textarea>
                     </div>
@@ -305,7 +303,6 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -315,31 +312,45 @@
 
             document.querySelectorAll(".start-draw-btn").forEach(button => {
                 button.addEventListener("click", function (e) {
-                    e.preventDefault(); 
+                    e.preventDefault();
 
                     var form = this.closest(".start-draw-form");
-                    var invitationToken = form.getAttribute("data-invitation");
-                    var messageContainer = document.getElementById("draw-message-" + invitationToken);
+                    var formData = new FormData(form);
 
-                    var groupElement = this.closest(".list-group-item");
-                    var participantCount = parseInt(groupElement.getAttribute("data-participants")) || 0;
-
-                    if (participantCount < 3) {
-                        messageContainer.innerHTML = `
-                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                    Not enough participants to start the draw.
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>`;
-                    } else {
-                        messageContainer.innerHTML = `
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    Draw successfully started!
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>`;
-                    }
+                    fetch(form.action, {
+                        method: form.method,
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                location.reload();
+                            } else {
+                                alert("Error: " + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("An unexpected error occurred.");
+                        });
                 });
             });
         });
+    </script>
+
+    <script>
+        function copyToClipboard(button) {
+            const input = button.previousElementSibling;
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value)
+                .then(() => {
+                    button.textContent = "Copied!";
+                    setTimeout(() => button.textContent = "Copy Link", 2000);
+                })
+                .catch(err => alert("Failed to copy the link"));
+        }
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
