@@ -140,15 +140,11 @@ namespace DataAccess.Repositories
             else return result;
         }
 
-        public async Task<UserPass> GetUserPassByEmailAsync(string email)
+        public async Task<UserPass?> GetUserPassByEmailAsync(string email)
         {
-            UserPass result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
-            if (result == null)
-            {
-                return new UserPass { };
-            }
-            else return result;
+            return await _context.UserPasses.FirstOrDefaultAsync(u => u.Email == email);
         }
+
 
         public async Task<AssignedRole> GetRoleByUserIdAsync(int userId)
         {

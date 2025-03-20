@@ -106,6 +106,7 @@ namespace Business
             user.UserPass = await _repository.GetUserPassByEmailAsync(login.Email);
             if(user.UserPass == null)
             {
+                Console.WriteLine($"No UserPass record found for email: {login.Email}");
                 throw new UnauthorizedAccessException("User pass not found.");
             }
 
@@ -149,6 +150,7 @@ namespace Business
         {
             try
             {
+
                 string hashEnteredPassword = HashPass(enteredPassword);
                 return hashEnteredPassword == storedHash;
             }

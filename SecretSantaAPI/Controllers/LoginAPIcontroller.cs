@@ -42,9 +42,9 @@ namespace SecretSantaAPI.Controllers
                 return Unauthorized("Invalid email or password");
             }
 
-            bool isPassValid = _authService.VerifyPass(request.Password, userPass.PassHash);
+            //bool isPassValid = _authService.VerifyPass(request.Password, userPass.UserPass.PassHash);
 
-            if (!isPassValid)
+            if (!userPass.IsSuccess)
             {
                 return Unauthorized("Invalid email or password");
             }
@@ -63,7 +63,7 @@ namespace SecretSantaAPI.Controllers
             {
                 return BadRequest("Role has no name assigned.");
             }
-            var email = userPass.Email;
+            var email = userPass.UserPass.Email;
             var userId = userPass.UserId;
             var roleName = await _repository.GetRoleById(role.RoleId);
             var token = _tokenService.CreateToken(userPass.UserId.ToString(), roleName);
