@@ -140,15 +140,11 @@ namespace DataAccess.Repositories
             else return result;
         }
 
-        public async Task<UserPass> GetUserPassByEmailAsync(string email)
+        public async Task<UserPass?> GetUserPassByEmailAsync(string email)
         {
-            UserPass result = _context.UserPasses.FirstOrDefault(u => u.Email == email);
-            if (result == null)
-            {
-                return new UserPass { };
-            }
-            else return result;
+            return await _context.UserPasses.FirstOrDefaultAsync(u => u.Email == email);
         }
+
 
         public async Task<AssignedRole> GetRoleByUserIdAsync(int userId)
         {
@@ -412,10 +408,15 @@ namespace DataAccess.Repositories
             return null;
         }
 
-        public async Task SaveGroupInfoAsync(List<GroupInfo> groupInfos)
+        public async Task SaveGroupInfoAsync(List<GroupInfo> assignments)
         {
-            await _context.GroupsInfo.AddRangeAsync(groupInfos);
+            _context.GroupsInfo.AddRange(assignments);
             await _context.SaveChangesAsync();
+        }
+        public async Task SaveGroupAsync(Group group)
+        {
+            _context.Groups.Update(group); 
+            await _context.SaveChangesAsync(); 
         }
 
         public bool? IsDrawn(int groupId)

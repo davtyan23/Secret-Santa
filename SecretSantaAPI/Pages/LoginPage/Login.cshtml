@@ -2,7 +2,6 @@
 @model SecretSantaAPI.Pages.LoginPage.LoginModel
 @{
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,8 +67,6 @@
                 <span class="text-danger" id="passwordError">@Model.PasswordError</span>
             </div>
 
-      
-
             <div class="form-group form-check">
                 <input type="checkbox" class="form-check-input" id="RememberMe" name="RememberMe">
                 <label class="form-check-label" for="RememberMe">Remember me</label>
@@ -115,7 +112,7 @@
                     }
 
                     const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                    
+
                     try {
                         const response = await fetch("/LoginPage/Login", {
                             method: "POST",
@@ -143,8 +140,26 @@
                 });
             }
         });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const togglePassword = document.getElementById("togglePassword");
+            const passwordField = document.getElementById("Password");
 
-
+            if (togglePassword && passwordField) {
+                togglePassword.addEventListener("click", function () {
+                    if (passwordField.type === "password") {
+                        passwordField.type = "text";
+                        togglePassword.classList.remove("fa-eye");
+                        togglePassword.classList.add("fa-eye-slash");
+                    } else {
+                        passwordField.type = "password";
+                        togglePassword.classList.remove("fa-eye-slash");
+                        togglePassword.classList.add("fa-eye");
+                    }
+                });
+            }
+        });
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

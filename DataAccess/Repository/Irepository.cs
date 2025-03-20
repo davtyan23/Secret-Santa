@@ -32,7 +32,8 @@ namespace DataAccess.Repositories
         Task<List<UserGroup>> GetUserGroupAsync(int groupId);
         string GenerateInvitationToken(int groupId);
         Task<Group> CreateGroupAsync(Group group);
-        Task SaveGroupInfoAsync(List<GroupInfo> groupInfos);
+        Task SaveGroupInfoAsync(List<GroupInfo> assignments);
+        Task SaveGroupAsync(Group group);
 
         bool? IsDrawn(int groupId);
 
